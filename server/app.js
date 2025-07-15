@@ -15,9 +15,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'https://blog-system-ochre.vercel.app/',
-  credentials: true
+  origin: '*'
 }));
+
 app.use(cookieParser());
 
 if (process.env.NODE_ENV === 'development') {
