@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://blog-system-q65l.onrender.com/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
