@@ -11,13 +11,10 @@ A full-featured blogging platform built using the MERN stack (MongoDB, Express.j
 
 - User authentication (register/login with JWT)
 - Create, read, update, delete (CRUD) blog posts
-- Category management (add, assign, and filter posts by category)
+- Category management 
 - Rich text editor for post content
-- Upload and update featured images
-- Commenting system
 - Pagination and sorting
 - Responsive design using Material UI
-- Role-based access control (Admin vs Author)
 - Form validation with Yup + React Hook Form
 
 ---
@@ -75,14 +72,11 @@ The client should now be running at `http://localhost:5173` and server at `http:
 ### Category Routes
 
 - `GET /api/categories` – Fetch all categories
-- `POST /api/categories` – Create new category (admin only)
-- `GET /api/posts/category/:categoryId` – Get posts by category
+- `POST /api/categories` – Create new category
 
 ---
 
 ## 🖼 Screenshots
-
-> Replace below with actual images after deployment.
 
 ### Home Page
 ![Home](home.png)
