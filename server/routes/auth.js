@@ -6,7 +6,7 @@ import {
   getMe,
   logout
 } from '../controllers/auth.js';
-import { protect } from '../middleware/auth.js';
+import { protect } from '../middleware/Auth.js';
 const router = express.Router();
 
 router.post('/register', register);
