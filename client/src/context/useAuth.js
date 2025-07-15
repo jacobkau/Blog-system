@@ -27,7 +27,7 @@ export const useAuth = () => {
  const register = useCallback(async (userData) => {
   setAuthState(prev => ({ ...prev, loading: true }));
   try {
-    const response = await axios.post('/api/auth/register', userData);
+    const response = await axios.post('https://blog-system-q65l.onrender.com/api/auth/register', userData);
 
     const token = response.data?.token;
     const user = response.data?.user;
@@ -58,13 +58,13 @@ export const useAuth = () => {
 const login = useCallback(async (credentials) => {
   setAuthState(prev => ({ ...prev, loading: true }));
   try {
-    const response = await axios.post('/api/auth/login', credentials);
+    const response = await axios.post('https://blog-system-q65l.onrender.com/api/auth/login', credentials);
 
     if (!response.data.token) throw new Error('No token received');
 
     localStorage.setItem('token', response.data.token);
 
-    const userResponse = await axios.get('/api/auth/me', {
+    const userResponse = await axios.get('https://blog-system-q65l.onrender.com/api/auth/me', {
       headers: {
         Authorization: `Bearer ${response.data.token}`
       }
@@ -92,7 +92,7 @@ const user = {
   const getMe = useCallback(async () => {
     setAuthState(prev => ({ ...prev, loading: true }));
     try {
-      const response = await axios.get('/api/auth/me');
+      const response = await axios.get('https://blog-system-q65l.onrender.com/api/auth/me');
       setAuthState(prev => ({
         ...prev,
         user: response.data,
