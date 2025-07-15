@@ -41,13 +41,11 @@ app.get('/', (req, res) => {
 import postsRouter from './routes/posts.js';
 import categoriesRouter from './routes/categories.js';
 import authRouter from './routes/auth.js';
-import commentRoutes from './routes/comments.js';
 
 // Mount routers
 app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/comments', commentRoutes);
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
