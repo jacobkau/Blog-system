@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api/categories/';
+const API_URL = 'https://blog-system-q65l.onrender.com/api/categories/';
 
 // Get all categories
 const getCategories = async () => {
