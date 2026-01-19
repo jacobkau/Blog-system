@@ -150,7 +150,7 @@ const Categories = () => {
             variant="contained"
             color="primary"
             component={Link}
-            to="/categories/create"
+            to="/categories/create-category"
           >
             Add New Category
           </Button>
