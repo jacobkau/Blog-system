@@ -15,24 +15,60 @@ const CreateCategory = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+
+
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError('');
   setMessage('');
 
+  console.log('Making request to:', 'https://blog-system-q65l.onrender.com/api/categories');
+  console.log('With data:', { name, description });
+
   try {
-    // Add the full URL instead of relative path
-    const res = await axios.post('https://blog-system-q65l.onrender.com/api/categories', { 
-      name, 
-      description 
-    });
-    setMessage(`Category "${res.data.name}" created successfully!`);
+    const res = await axios.post(
+      'https://blog-system-q65l.onrender.com/api/categories', 
+      { name, description },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log('Response:', res);
+    console.log('Response data:', res.data);
+    
+    // Your backend returns data in res.data.data
+    setMessage(`Category "${res.data.data?.name}" created successfully!`);
     setName('');
     setDescription('');
   } catch (err) {
-    setError(err.response?.data?.error || 'Failed to create category');
+    console.error('Full error:', err);
+    console.error('Error response:', err.response);
+    
+    let errorMessage = 'Failed to create category';
+    if (err.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      errorMessage = err.response.data?.error || 
+                    err.response.data?.message || 
+                    `Server error: ${err.response.status}`;
+    } else if (err.request) {
+      // The request was made but no response was received
+      errorMessage = 'No response from server. Check network connection.';
+    } else {
+      // Something happened in setting up the request
+      errorMessage = err.message;
+    }
+    
+    setError(errorMessage);
   }
 };
+
+
+
+  
 
   return (
     <Container maxWidth="sm" sx={{ mt: 6 }}>
