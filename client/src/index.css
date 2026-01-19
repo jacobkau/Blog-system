@@ -1,1 +1,24 @@
 @import "tailwindcss";
+/* Smooth transitions */
+.MuiButton-root, .MuiIconButton-root, .MuiAvatar-root {
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Better scrollbar for drawer */
+.MuiDrawer-paper {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.MuiDrawer-paper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.MuiDrawer-paper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.MuiDrawer-paper::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
