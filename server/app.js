@@ -53,7 +53,27 @@ mongoose
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
-
+// server/app.js - Add a health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Check MongoDB connection
+    await mongoose.connection.db.admin().ping();
+    
+    res.status(200).json({
+      status: 'healthy',
+      mongo: 'connected',
+      timestamp: new Date(),
+      uptime: process.uptime()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      mongo: 'disconnected',
+      error: error.message,
+      timestamp: new Date()
+    });
+  }
+});
 // Routes
 app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
