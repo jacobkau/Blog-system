@@ -150,7 +150,7 @@ const Categories = () => {
             variant="contained"
             color="primary"
             component={Link}
-            to="/categories/create-category"
+            to="/create-category"
           >
             Add New Category
           </Button>
@@ -173,7 +173,7 @@ const Categories = () => {
               variant="outlined"
               sx={{ mt: 2 }}
               component={Link}
-              to="/categories/create-category"
+              to="/create-category"
             >
               Create Your First Category
             </Button>
