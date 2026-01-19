@@ -15,6 +15,7 @@ import SinglePost from './pages/posts/SinglePost';
 import CreatePost from './pages/posts/CreatePost';
 import EditPost from './pages/posts/EditPost';
 import Categories from './pages/categories/Categories';
+import CategoryPosts from './pages/categories/CategoryPosts.jsx';
 import Profile from './pages/user/Profile';
 import NotFound from './pages/NotFound';
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="/posts/:id" element={<SinglePost />} />
             <Route path="/edit-post/:id" element={<EditPost />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/category/:slugOrId" element={<CategoryPosts />} />
             <Route path="/create-category" element={<CreateCategory />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/profile" element={<Profile />} />
