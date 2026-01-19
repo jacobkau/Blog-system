@@ -34,11 +34,19 @@ const Categories = () => {
     message: '',
     severity: 'success'
   });
-
-  // Get current user from auth context
-  const { user } = useAuth();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Get user from localStorage on component mount
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+    
     fetchCategories();
   }, []);
 
@@ -46,7 +54,9 @@ const Categories = () => {
     try {
       setLoading(true);
       const response = await categoryService.getCategories();
-      setCategories(response.data);
+      // Handle both response formats
+      const categoriesData = response.data?.data || response.data || response;
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setError(null);
     } catch (err) {
       setError("Failed to load categories");
@@ -104,19 +114,19 @@ const Categories = () => {
     
     // If owner is stored as object with _id
     if (category.owner._id) {
-      return category.owner._id === user.id;
+      return category.owner._id === user.id || category.owner._id === user._id;
     }
     
     // If owner is stored as string ID
     if (typeof category.owner === 'string') {
-      return category.owner === user.id;
+      return category.owner === user.id || category.owner === user._id;
     }
     
     return false;
   };
 
   // Check if user is admin (optional additional permission)
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.isAdmin;
 
   if (loading) return <Spinner />;
 
@@ -176,9 +186,9 @@ const Categories = () => {
               <Card sx={{ height: "100%", position: 'relative' }}>
                 <CardContent>
                   {/* Owner badge */}
-                  {isCategoryOwner(category) && (
+                  {(isCategoryOwner(category) || isAdmin) && (
                     <Chip
-                      label="Owner"
+                      label={isAdmin ? "Admin" : "Owner"}
                       color="primary"
                       size="small"
                       sx={{ position: 'absolute', top: 10, right: 10 }}
@@ -196,7 +206,7 @@ const Categories = () => {
                   {/* Post count (if available) */}
                   {category.postCount !== undefined && (
                     <Typography variant="caption" color="text.secondary">
-                      {category.postCount} posts
+                      {category.postCount} {category.postCount === 1 ? 'post' : 'posts'}
                     </Typography>
                   )}
                   
@@ -278,6 +288,7 @@ const Categories = () => {
             color="error" 
             variant="contained"
             autoFocus
+            disabled={categoryToDelete?.postCount > 0}
           >
             Delete
           </Button>
