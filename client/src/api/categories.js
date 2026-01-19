@@ -24,9 +24,24 @@ const createCategory = async (categoryData, token) => {
   const response = await axios.post(API_URL, categoryData, config);
   return response.data;
 };
+// Update category
+const updateCategory = async (id, categoryData) => {
+  return axios.put(API_URL + id, categoryData, { 
+    headers: getAuthHeader() 
+  });
+};
+
+// Delete category
+const deleteCategory = async (id) => {
+  return axios.delete(API_URL + id, { 
+    headers: getAuthHeader() 
+  });
+};
 
 export default {
   getCategories,
   getCategory,
-  createCategory
+  createCategory,
+  updateCategory,
+  deleteCategory
 };
