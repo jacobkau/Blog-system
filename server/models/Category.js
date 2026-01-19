@@ -15,6 +15,11 @@ const CategorySchema = new mongoose.Schema({
     maxlength: [500, 'Description cannot be more than 500 characters'],
     default:""
   },
+   owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
