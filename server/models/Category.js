@@ -20,6 +20,10 @@ const CategorySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+   postCount: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
