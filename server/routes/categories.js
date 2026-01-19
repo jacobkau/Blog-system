@@ -6,7 +6,7 @@ import {
   updateCategory,
   deleteCategory
 } from '../controllers/categories.js';
-import { protect } from '../middleware/auth.js'; // Import protect middleware
+import { protect } from '../middleware/Auth.js'; // Import protect middleware
 
 const router = express.Router();
 
