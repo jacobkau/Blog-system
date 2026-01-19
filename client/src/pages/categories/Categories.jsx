@@ -22,7 +22,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import categoryService from "../../api/categories";
 import Spinner from "../../components/ui/Spinner";
 import { Link } from 'react-router-dom';
-import { useAuthContext } from '../../context'; 
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
