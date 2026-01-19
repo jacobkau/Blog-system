@@ -1,4 +1,3 @@
-// server/app.js - Updated CORS configuration
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -13,76 +12,58 @@ dotenv.config();
 
 const app = express();
 
-// Middleware - IMPORTANT: CORS must come BEFORE other middleware
+// Middleware
+app.use(express.json());
+app.use(cookieParser());
+
+// Allow specific frontend origins (adjust for Vercel or local dev)
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://blog-system-ochre.vercel.app',
-  // Add any other domains if needed
+  'https://blog-system-ochre.vercel.app', 
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, postman)
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.log('CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-    exposedHeaders: ['Set-Cookie']
+    credentials: true, // allow cookies and headers
   })
 );
-
-// Handle preflight requests
-app.options('*', cors()); // Enable preflight for all routes
-
-app.use(express.json());
-app.use(cookieParser());
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// MongoDB connection with better error handling
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // 5 seconds timeout
-      socketTimeoutMS: 45000,
-    });
-    console.log('✅ MongoDB Connected');
-  } catch (err) {
+// MongoDB connection
+// server/app.js - Update MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch((err) => {
     console.error('❌ MongoDB connection error:', err.message);
     process.exit(1);
-  }
-};
+  });
 
-connectDB();
-
-// Routes
+// Test route
 app.get('/', (req, res) => {
-  res.json({ message: 'API is running...' });
+  res.send('API is running...');
 });
-
+// server/app.js - Add a health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
+    // Check MongoDB connection
     await mongoose.connection.db.admin().ping();
+    
     res.status(200).json({
       status: 'healthy',
       mongo: 'connected',
       timestamp: new Date(),
-      uptime: process.uptime(),
-      cors: 'enabled',
-      allowedOrigins: allowedOrigins
+      uptime: process.uptime()
     });
   } catch (error) {
     res.status(500).json({
@@ -93,37 +74,19 @@ app.get('/api/health', async (req, res) => {
     });
   }
 });
-
-// API routes
+// Routes
 app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// Error handler
+// Error handler (optional but good)
 app.use((err, req, res, next) => {
   console.error('🚨 Server Error:', err.stack);
-  
-  // Handle CORS errors specifically
-  if (err.message.includes('CORS')) {
-    return res.status(403).json({ 
-      message: 'CORS error', 
-      error: err.message 
-    });
-  }
-  
-  res.status(500).json({ 
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT} (${process.env.NODE_ENV})`)
+  console.log(`🚀 Server running on http://localhost:${PORT} (${process.env.NODE_ENV})`)
 );
