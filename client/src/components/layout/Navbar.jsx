@@ -70,7 +70,7 @@ const Navbar = ({ user, onLogout }) => {
           <ArticleIcon />
         </Avatar>
         <Typography variant="h6" fontWeight={700}>
-          Witty Blog
+          Witty Blog System
         </Typography>
       </Box>
       
