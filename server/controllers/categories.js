@@ -13,7 +13,9 @@ export const getCategories = asyncHandler(async (req, res) => {
     data: categories
   });
 });
-
+// @desc    Get all categories
+// @route   GET /api/categories
+// @access  Public
 export const deleteCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
