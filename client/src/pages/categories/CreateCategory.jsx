@@ -22,9 +22,6 @@ const handleSubmit = async (e) => {
   setError('');
   setMessage('');
 
-  console.log('Making request to:', 'https://blog-system-q65l.onrender.com/api/categories');
-  console.log('With data:', { name, description });
-
   try {
     const res = await axios.post(
       'https://blog-system-q65l.onrender.com/api/categories', 
@@ -36,8 +33,7 @@ const handleSubmit = async (e) => {
       }
     );
     
-    console.log('Response:', res);
-    console.log('Response data:', res.data);
+    
     
     // Your backend returns data in res.data.data
     setMessage(`Category "${res.data.data?.name}" created successfully!`);
