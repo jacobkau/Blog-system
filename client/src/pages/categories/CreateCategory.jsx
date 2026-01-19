@@ -15,20 +15,24 @@ const CreateCategory = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setMessage('');
 
-    try {
-      const res = await axios.post('/api/categories', { name, description });
-      setMessage(`Category "${res.data.name}" created successfully!`);
-      setName('');
-      setDescription('');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create category');
-    }
-  };
+  try {
+    // Add the full URL instead of relative path
+    const res = await axios.post('https://blog-system-q65l.onrender.com/api/categories', { 
+      name, 
+      description 
+    });
+    setMessage(`Category "${res.data.name}" created successfully!`);
+    setName('');
+    setDescription('');
+  } catch (err) {
+    setError(err.response?.data?.error || 'Failed to create category');
+  }
+};
 
   return (
     <Container maxWidth="sm" sx={{ mt: 6 }}>
