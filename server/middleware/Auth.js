@@ -1,8 +1,8 @@
+middleware
 import jwt from 'jsonwebtoken';
 import ErrorResponse from '../utils/errorResponse.js';
 import User from '../models/User.js';
 
-// middleware/auth.js
 export const protect = async (req, res, next) => {
     let token;
     
@@ -11,16 +11,17 @@ export const protect = async (req, res, next) => {
         token = req.headers.authorization.split(' ')[1];
     }
 
+    // Make sure token exists
     if (!token) {
         return next(new ErrorResponse('Not authorized to access this route', 401));
     }
 
-    try {
+     try {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // FIXED: Don't select password
-        req.user = await User.findById(decoded.id).select('-password');
+        // Problem is here - you're selecting the password field
+        req.user = await User.findById(decoded.id).select('+password');
         
         if (!req.user) {
             return next(new ErrorResponse('No user found with this ID', 404));
