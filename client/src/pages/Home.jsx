@@ -221,7 +221,7 @@ const Home = () => {
           variant="contained" 
           size="large" 
           component={Link} 
-          to={user ? "/posts/new" : "/register"}
+          to={user ? "/create-post" : "/register"}
           sx={{ px: 6, mb: 2 }}
         >
           {user ? 'Create Your First Post' : 'Get Started Free'}
