@@ -62,19 +62,52 @@ const Navbar = ({ user, onLogout }) => {
   };
 
   // Mobile drawer content
-  const drawerContent = (
-    <Box sx={{ width: 280, height: "100%" }} role="presentation">
-      {/* Logo and title */}
-      <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Avatar sx={{ bgcolor: "primary.main" }}>
-          <ArticleIcon />
-        </Avatar>
-        <Typography variant="h6" fontWeight={700}>
-          Witty Blog System
+const drawerContent = (
+  <Box sx={{ width: 280, height: "100%" }} role="presentation">
+    {/* Logo and title */}
+    <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
+      <Box
+        sx={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          boxShadow: 2,
+          border: '2px solid',
+          borderColor: 'primary.light',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="Witty Blog Logo"
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+          onError={(e) => {
+            // Fallback to colored background
+            e.target.style.display = 'none';
+            e.target.parentElement.style.backgroundColor = 'primary.main';
+            e.target.parentElement.innerHTML = '<ArticleIcon style={{color: "white"}} />';
+          }}
+        />
+      </Box>
+      <Box>
+        <Typography variant="h6" fontWeight={700} lineHeight={1}>
+          Witty Blog
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Management System
         </Typography>
       </Box>
-      
-      <Divider />
+    </Box>
+    
+    <Divider />
       
       {/* Navigation links */}
       <List>
