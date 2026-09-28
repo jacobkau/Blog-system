@@ -7,32 +7,34 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a name'],
     trim: true,
-    maxlength: [50, 'Name cannot be more than 50 characters']
+    maxlength: [50, 'Name cannot be more than 50 characters'],
   },
   email: {
     type: String,
     required: [true, 'Please add an email'],
     unique: true,
+    lowercase: true,
+    trim: true,
     match: [
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+      'Please add a valid email',
+    ],
   },
   password: {
     type: String,
     required: [true, 'Please add a password'],
     minlength: 6,
-    select: false
+    select: false,
   },
   role: {
     type: String,
     enum: ['user', 'admin'],
-    default: 'user'
+    default: 'user',
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Encrypt password before saving
@@ -46,12 +48,17 @@ UserSchema.pre('save', async function (next) {
 // Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
+    expiresIn: process.env.JWT_EXPIRE || '30d', 
   });
 };
 
 // Match entered password with hashed password
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) {
+    throw new Error(
+      'Password not selected on user query. Did you forget .select("+password")?'
+    );
+  }
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
