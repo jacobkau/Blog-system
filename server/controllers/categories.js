@@ -50,16 +50,12 @@ export const deleteCategory = async (req, res) => {
 // @access  Private/Admin
 export const createCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
-  
-  // Check if category exists
-  const existingCategory = await Category.findOne({ name });
-  if (existingCategory) {
-    throw new ErrorResponse(`Category '${name}' already exists`, 400);
-  }
 
+  // Add owner from the authenticated user
   const category = await Category.create({
     name,
-    description
+    description,
+    owner: req.user.id   
   });
 
   res.status(201).json({
