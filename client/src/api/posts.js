@@ -2,13 +2,14 @@ import axios from 'axios';
 
 const API_URL = 'https://blog-system-q65l.onrender.com/api/posts/';
 
-// Create axios instance with base config
+// Create axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 60000,               
+  withCredentials: true,        
 });
 
-// Add request interceptor for auth token
+// Attach JWT from localStorage (kept for the Bearer fallback)
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,7 +21,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// Handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -45,66 +46,27 @@ apiClient.interceptors.response.use(
 
 // Get all posts
 const getPosts = async (params = {}) => {
-  try {
-    console.log('Request params:', JSON.stringify(params, null, 2));
-    const response = await apiClient.get('', { params });
-    console.log('Full response structure:', {
-      status: response.status,
-      data: response.data,
-      config: response.config
-    });
-    return response.data;
-  } catch (error) {
-    console.error('API Error Details:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-    throw error;
-  }
+  const response = await apiClient.get('', { params });
+  return response.data;
 };
 
 // Get single post
 const getPost = async (postId) => {
-  const response = await apiClient.get(postId, {
-    params: {
-      include: 'author,categories,related'
-    }
-  });
+  if (!postId) throw new Error('postId is required');
+  const response = await apiClient.get(postId);
   return response.data;
 };
 
 // Create new post
-export const createPost = async (postData) => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await axios.post('/api/posts', postData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Post creation error:', {
-      message: error.response?.data?.message,
-      status: error.response?.status
-    });
-    throw error;
-  }
+const createPost = async (postData) => {
+  const response = await apiClient.post('', postData);  
+  return response.data;
 };
 
+// Update post
 const updatePost = async (postId, postData) => {
-  try {
-    const response = await apiClient.put(`${postId}`, postData); // JSON body
-    return response.data;
-  } catch (error) {
-    console.error('Post update error:', {
-      message: error.response?.data?.message,
-      status: error.response?.status
-    });
-    throw error;
-  }
+  const response = await apiClient.put(postId, postData);
+  return response.data;
 };
 
 // Delete post
@@ -113,19 +75,16 @@ const deletePost = async (postId) => {
   return response.data;
 };
 
-
+// Get posts by category
 const getPostsByCategory = async (categoryId, params = {}) => {
-  const response = await apiClient.get(`/category/${categoryId}`, { params });
-  return response.data; 
+  const response = await apiClient.get(`category/${categoryId}`, { params });  
+  return response.data;
 };
 
 // Get featured posts
 const getFeaturedPosts = async (limit = 3) => {
   const response = await apiClient.get('', {
-    params: {
-      featured: true,
-      limit
-    }
+    params: { featured: true, limit },
   });
   return response.data;
 };
@@ -137,5 +96,4 @@ export default {
   updatePost,
   deletePost,
   getPostsByCategory,
-  getFeaturedPosts
-};
+  getFeaturedPosts,
