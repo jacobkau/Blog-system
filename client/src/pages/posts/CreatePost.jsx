@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // Added useEffect import
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -46,18 +46,24 @@ const CreatePost = () => {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      categories: [], // ✅ Ensure this is an array
+      categories: [],
     },
   });
 
   useEffect(() => {
-    // Fetch categories from API
     const fetchCategories = async () => {
       try {
         const response = await categoryService.getCategories();
-        setCategories(response.data);
+        const list = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+        setCategories(list);
       } catch (err) {
         console.error("Failed to load categories", err);
+        setCategories([]);
       }
     };
 
@@ -66,28 +72,39 @@ const CreatePost = () => {
 
   const handleCategoryChange = (event) => {
     const value = event.target.value;
-
     const safeArray = Array.isArray(value) ? value : [value];
 
     setSelectedCategories(safeArray);
-    setValue("categories", safeArray);
+    setValue("categories", safeArray, { shouldValidate: true });
   };
 
   const onSubmit = async (data) => {
-    if (!user) return;
+    if (!user) {
+      setError("You must be logged in to create a post.");
+      return;
+    }
 
     setIsSubmitting(true);
+    setError(""); 
+
     try {
-      await postService.createPost(
-        {
-          ...data,
-          author: user.id,
-        },
-        user.token
-      );
+  
+      await postService.createPost({
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        categories: data.categories,
+      });
+
       navigate("/posts");
     } catch (err) {
-      setError(err.response?.data?.message || "Error creating post");
+      
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Error creating post";
+      setError(message);
       setIsSubmitting(false);
     }
   };
