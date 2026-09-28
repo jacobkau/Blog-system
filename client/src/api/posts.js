@@ -96,5 +96,5 @@ export default {
   updatePost,
   deletePost,
   getPostsByCategory,
-  getFeaturedPosts,
+  getFeaturedPosts
 };
