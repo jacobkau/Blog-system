@@ -5,11 +5,11 @@ const API_URL = 'https://blog-system-q65l.onrender.com/api/posts/';
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 60000,               
-  withCredentials: true,        
+  timeout: 60000,
+  withCredentials: true,
 });
 
-// Attach JWT from localStorage (kept for the Bearer fallback)
+// Attach JWT from localStorage
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -59,7 +59,7 @@ const getPost = async (postId) => {
 
 // Create new post
 const createPost = async (postData) => {
-  const response = await apiClient.post('', postData);  
+  const response = await apiClient.post('', postData);
   return response.data;
 };
 
@@ -77,7 +77,7 @@ const deletePost = async (postId) => {
 
 // Get posts by category
 const getPostsByCategory = async (categoryId, params = {}) => {
-  const response = await apiClient.get(`category/${categoryId}`, { params });  
+  const response = await apiClient.get(`category/${categoryId}`, { params });
   return response.data;
 };
 
@@ -97,3 +97,4 @@ export default {
   deletePost,
   getPostsByCategory,
   getFeaturedPosts,
+};
