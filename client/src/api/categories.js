@@ -2,40 +2,68 @@ import axios from 'axios';
 
 const API_URL = 'https://blog-system-q65l.onrender.com/api/categories/';
 
+// Create an axios instance with consistent config
+const apiClient = axios.create({
+  baseURL: API_URL,
+  timeout: 60000,
+  withCredentials: true,  
+});
+
+// Attach token from localStorage (Bearer fallback)
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Log errors for debugging
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
+
 // Get all categories
 const getCategories = async () => {
-  const response = await axios.get(API_URL);
+  const response = await apiClient.get('');
   return response.data;
 };
 
 // Get single category
 const getCategory = async (categoryId) => {
-  const response = await axios.get(API_URL + categoryId);
+  const response = await apiClient.get(categoryId);
   return response.data;
 };
 
-// Create category (admin only)
-const createCategory = async (categoryData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  const response = await axios.post(API_URL, categoryData, config);
+// Create category
+const createCategory = async (categoryData) => {
+  const response = await apiClient.post('', categoryData);
   return response.data;
 };
+
 // Update category
 const updateCategory = async (id, categoryData) => {
-  return axios.put(API_URL + id, categoryData, { 
-    headers: getAuthHeader() 
-  });
+  const response = await apiClient.put(id, categoryData);
+  return response.data; 
 };
 
 // Delete category
 const deleteCategory = async (id) => {
-  return axios.delete(API_URL + id, { 
-    headers: getAuthHeader() 
-  });
+  const response = await apiClient.delete(id);
+  return response.data;
 };
 
 export default {
@@ -43,5 +71,5 @@ export default {
   getCategory,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 };
