@@ -95,12 +95,19 @@ export const updateDetails = asyncHandler(async (req, res, next) => {
   const fieldsToUpdate = {
     name: req.body.name,
     email: req.body.email,
+    bio: req.body.bio,
+    location: req.body.location,
+    website: req.body.website,
   };
+
+  Object.keys(fieldsToUpdate).forEach(
+    (key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
+  );
 
   const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
     new: true,
     runValidators: true,
-  });
+  }).select('-password');
 
   res.status(200).json({
     success: true,
