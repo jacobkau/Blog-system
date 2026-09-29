@@ -19,7 +19,7 @@ export const uploadAvatar = asyncHandler(async (req, res, next) => {
   const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
   const result = await cloudinary.v2.uploader.upload(dataURI, {
-    folder: 'wittymart/avatars',
+    folder: 'blogsystem/avatars',
     width: 300,
     height: 300,
     crop: 'fill',
