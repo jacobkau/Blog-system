@@ -231,7 +231,7 @@ const Categories = () => {
                           to={`/categories/edit/${category._id}`}
                           sx={{ mr: 1 }}
                         >
-                          <EditIcon fontSize="small" />
+                          <EditIcon fontSize="small" /> Edit
                         </IconButton>
                         
                         <IconButton
@@ -240,7 +240,7 @@ const Categories = () => {
                           onClick={() => handleDeleteClick(category)}
                           disabled={category.postCount > 0} 
                         >
-                          <DeleteIcon fontSize="small" />
+                          <DeleteIcon fontSize="small" /> Delete
                         </IconButton>
                       </Box>
                     )}
