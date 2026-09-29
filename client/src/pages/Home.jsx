@@ -28,13 +28,13 @@ import {
 import { useAuthContext } from '../context';
 
 /* ============================================================
-   Features Section (separate component for clarity)
+   Features Section
    ============================================================ */
 const Features = ({ features }) => {
   const theme = useTheme();
 
   return (
-    <Box sx={{ mb: 8, px: { xs: 2, sm: 3, md: 4 } }}>
+    <Box sx={{ mb: 8, px: { xs: 1, sm: 2, md: 3 } }}>
       {/* Section heading */}
       <Box sx={{ textAlign: 'center', mb: 5 }}>
         <Typography
@@ -53,14 +53,7 @@ const Features = ({ features }) => {
           variant="h4"
           component="h2"
           gutterBottom
-          sx={{
-            fontWeight: 700,
-            mb: 1.5,
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
+          sx={{ fontWeight: 700, mb: 1.5 }}
         >
           Why Choose Our Platform
         </Typography>
@@ -84,32 +77,18 @@ const Features = ({ features }) => {
                 height: '100%',
                 borderRadius: 3,
                 border: `1px solid ${theme.palette.divider}`,
-                background: `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
+                background: theme.palette.background.paper,
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
                 overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  opacity: 0,
-                  transition: 'opacity 0.3s ease',
-                },
                 '&:hover': {
                   transform: 'translateY(-6px)',
-                  boxShadow: theme.shadows[8],
+                  boxShadow: theme.shadows[6],
                   borderColor: theme.palette.primary.main,
-                  '&::before': {
-                    opacity: 1,
-                  },
                 },
               }}
             >
-              {/* Icon in a colored circle */}
+              {/* Icon in a soft colored circle */}
               <Box
                 sx={{
                   display: 'inline-flex',
@@ -118,13 +97,13 @@ const Features = ({ features }) => {
                   width: 56,
                   height: 56,
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}22, ${theme.palette.secondary.main}22)`,
+                  backgroundColor: `${theme.palette.primary.main}14`, // ~8% opacity
                   color: theme.palette.primary.main,
                   mb: 2,
                   fontSize: '1.75rem',
                   transition: 'transform 0.3s ease',
                   '.MuiPaper-root:hover &': {
-                    transform: 'scale(1.1) rotate(-3deg)',
+                    transform: 'scale(1.08)',
                   },
                 }}
               >
@@ -272,99 +251,100 @@ const Home = () => {
       <Features features={features} />
 
       {/* ================================
-          How It Works
+          How It Works + FAQ (side by side)
          ================================ */}
-      <Box sx={{ mb: 6 }}>
-        <Typography
-          variant="h4"
-          component="h2"
-          gutterBottom
-          sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}
-        >
-          How It Works
-        </Typography>
-        <Box sx={{ maxWidth: 600, mx: 'auto' }}>
-          <List>
-            {howItWorks.map((step, index) => (
-              <ListItem key={index} sx={{ py: 1.5 }}>
-                <ListItemIcon>
-                  <CheckCircle color="primary" />
-                </ListItemIcon>
-                <ListItemText primary={step} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Box>
-
-      {/* ================================
-          FAQ Section
-         ================================ */}
-      <Box sx={{ mb: 6 }}>
-        <Typography
-          variant="h4"
-          component="h2"
-          gutterBottom
-          sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}
-        >
-          Frequently Asked Questions
-        </Typography>
-        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-          <Accordion
-            expanded={expandedPanel === 'panel1'}
-            onChange={handleAccordionChange('panel1')}
+      <Grid container spacing={4} sx={{ mb: 6, alignItems: 'flex-start' }}>
+        {/* Left: How It Works */}
+        <Grid item xs={12} md={5}>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}
           >
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography fontWeight={500}>
-                Is this platform free to use?
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography>
-                Yes! Our basic features are completely free forever. We may
-                offer premium features in the future, but core functionality
-                will always remain free.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
+            How It Works
+          </Typography>
+          <Box sx={{ maxWidth: 480, mx: 'auto' }}>
+            <List>
+              {howItWorks.map((step, index) => (
+                <ListItem key={index} sx={{ py: 1.5 }}>
+                  <ListItemIcon>
+                    <CheckCircle color="primary" />
+                  </ListItemIcon>
+                  <ListItemText primary={step} />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Grid>
 
-          <Accordion
-            expanded={expandedPanel === 'panel2'}
-            onChange={handleAccordionChange('panel2')}
+        {/* Right: FAQ */}
+        <Grid item xs={12} md={7}>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}
           >
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography fontWeight={500}>
-                Can I write about any topic?
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography>
-                You can write about any appropriate topic that follows our
-                community guidelines. We encourage diverse perspectives and
-                meaningful discussions.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
+            Frequently Asked Questions
+          </Typography>
+          <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+            <Accordion
+              expanded={expandedPanel === 'panel1'}
+              onChange={handleAccordionChange('panel1')}
+            >
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography fontWeight={500}>
+                  Is this platform free to use?
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  Yes! Our basic features are completely free forever. We may
+                  offer premium features in the future, but core functionality
+                  will always remain free.
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
 
-          <Accordion
-            expanded={expandedPanel === 'panel3'}
-            onChange={handleAccordionChange('panel3')}
-          >
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography fontWeight={500}>
-                How do I get more readers?
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography>
-                Consistently create quality content, engage with other writers,
-                use relevant categories, and share your posts on social media
-                to grow your audience.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
-        </Box>
-      </Box>
+            <Accordion
+              expanded={expandedPanel === 'panel2'}
+              onChange={handleAccordionChange('panel2')}
+            >
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography fontWeight={500}>
+                  Can I write about any topic?
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  You can write about any appropriate topic that follows our
+                  community guidelines. We encourage diverse perspectives and
+                  meaningful discussions.
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion
+              expanded={expandedPanel === 'panel3'}
+              onChange={handleAccordionChange('panel3')}
+            >
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography fontWeight={500}>
+                  How do I get more readers?
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  Consistently create quality content, engage with other writers,
+                  use relevant categories, and share your posts on social media
+                  to grow your audience.
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+          </Box>
+        </Grid>
+      </Grid>
 
       {/* ================================
           Final Call to Action
