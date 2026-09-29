@@ -15,6 +15,13 @@ const SinglePost = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // ✅ Guard: only fetch if id looks like a valid Mongo ObjectId
+    if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+      setError("Invalid post ID");
+      setLoading(false);
+      return;
+    }
+
     const fetchPost = async () => {
       try {
         setLoading(true);
@@ -23,7 +30,11 @@ const SinglePost = () => {
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch post:", err);
-        setError(err.response?.data?.message || "Failed to load post");
+        setError(
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to load post"
+        );
         setLoading(false);
       }
     };
@@ -33,13 +44,13 @@ const SinglePost = () => {
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-    
+
     try {
-      await postService.deletePost(post._id, user.token);
-      navigate("/posts"); 
+      await postService.deletePost(post._id);
+      navigate("/posts");
     } catch (err) {
       console.error("Failed to delete:", err);
-      alert(err.response?.data?.message || "Error deleting post");
+      alert(err.response?.data?.error || err.response?.data?.message || "Error deleting post");
     }
   };
 
@@ -64,7 +75,7 @@ const SinglePost = () => {
           <Typography variant="subtitle1" color="text.secondary">
             By {post.author?.name || "Unknown author"}
           </Typography>
-        </Box>       
+        </Box>
 
         <Typography
           variant="body1"
@@ -80,8 +91,8 @@ const SinglePost = () => {
               variant="contained"
               color="primary"
               component={Link}
-              to={`/edit-post/${post._id}`} // Simplified path
-              state={{ post }} // Pass post data to edit page
+              to={`/edit-post/${post._id}`}
+              state={{ post }}
             >
               Edit Post
             </Button>
