@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 
-// CORS config
+// ✅ CORS config
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -23,8 +23,10 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
+    // No origin (curl, Postman, mobile) → allow
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+
     console.error('❌ CORS blocked origin:', origin);
     return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
@@ -33,10 +35,19 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Length', 'X-Requested-With'],
   maxAge: 86400,
+  optionsSuccessStatus: 204,
 };
 
+// ✅ Apply CORS to every request (including GET, POST, PUT...)
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+
+// ✅ Handle preflight for ALL routes — works in Express 4 and 5
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return cors(corsOptions)(req, res, next);
+  }
+  next();
+});
 
 // Body + cookie parsers
 app.use(express.json({ limit: '10mb' }));
@@ -49,9 +60,9 @@ if (process.env.NODE_ENV === 'development') {
 // MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log(' MongoDB Connected'))
+  .then(() => console.log('✅ MongoDB Connected'))
   .catch((err) => {
-    console.error(' MongoDB connection error:', err.message);
+    console.error('❌ MongoDB connection error:', err.message);
     process.exit(1);
   });
 
@@ -60,7 +71,7 @@ app.get('/', (req, res) => res.send('API is running...'));
 
 app.get('/api/cors-debug', (req, res) => {
   res.json({
-    origin: req.headers.origin,
+    origin: req.headers.origin || 'NO ORIGIN HEADER',
     allowedOrigins,
     ok: allowedOrigins.includes(req.headers.origin),
   });
@@ -91,6 +102,7 @@ app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
 
+// ✅ Only ONE error handler — the imported one
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
