@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import {
   Container,
   Typography,
@@ -14,31 +14,40 @@ import {
   Select,
   MenuItem,
   Chip,
-} from "@mui/material";
-import postService from "../../api/posts";
-import categoryService from "../../api/categories";
-import { useAuthContext } from "../../context";
+  CircularProgress,
+} from '@mui/material';
+import postService from '../../api/posts';
+import categoryService from '../../api/categories';
+import { useAuthContext } from '../../context';
+import RichTextEditor from '../../components/editor/RichTextEditor';
+
 
 const schema = yup.object().shape({
-  title: yup.string().required("Title is required"),
-  content: yup
+  title: yup.string().required('Title is required'),
+  excerpt: yup
     .string()
-    .required("Content is required")
-    .min(100, "Content should be at least 100 characters"),
-  excerpt: yup.string().max(200, "Excerpt must be less than 200 characters"),
-  categories: yup.array().min(1, "Select at least one category"),
+    .required('Excerpt is required')
+    .max(200, 'Excerpt must be less than 200 characters'),
+  categories: yup.array().min(1, 'Select at least one category'),
 });
+
+
+const getTextLength = (html = '') =>
+  html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
 
 const CreatePost = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const preSelectedCategory = searchParams.get("category");
+  const preSelectedCategory = searchParams.get('category');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+
+  // ✅ Rich text content (HTML)
+  const [contentHTML, setContentHTML] = useState('');
 
   const {
     register,
@@ -47,9 +56,7 @@ const CreatePost = () => {
     setValue,
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: {
-      categories: [],
-    },
+    defaultValues: { categories: [] },
   });
 
   useEffect(() => {
@@ -61,57 +68,58 @@ const CreatePost = () => {
           : Array.isArray(response?.data)
           ? response.data
           : [];
-
         setCategories(list);
       } catch (err) {
-        console.error("Failed to load categories", err);
+        console.error('Failed to load categories', err);
         setCategories([]);
       }
     };
-
     fetchCategories();
   }, []);
 
-  // ✅ Pre-select category if ?category=xxx is in the URL
   useEffect(() => {
     if (preSelectedCategory) {
       setSelectedCategories([preSelectedCategory]);
-      setValue("categories", [preSelectedCategory], { shouldValidate: true });
+      setValue('categories', [preSelectedCategory], { shouldValidate: true });
     }
   }, [preSelectedCategory, setValue]);
 
   const handleCategoryChange = (event) => {
     const value = event.target.value;
     const safeArray = Array.isArray(value) ? value : [value];
-
     setSelectedCategories(safeArray);
-    setValue("categories", safeArray, { shouldValidate: true });
+    setValue('categories', safeArray, { shouldValidate: true });
   };
 
   const onSubmit = async (data) => {
     if (!user) {
-      setError("You must be logged in to create a post.");
+      setError('You must be logged in to create a post.');
+      return;
+    }
+
+  
+    if (getTextLength(contentHTML) < 100) {
+      setError('Content must be at least 100 characters.');
       return;
     }
 
     setIsSubmitting(true);
-    setError("");
+    setError('');
 
     try {
       await postService.createPost({
         title: data.title,
-        content: data.content,
+        content: contentHTML, 
         excerpt: data.excerpt,
         categories: data.categories,
       });
-
-      navigate("/posts");
+      navigate('/posts');
     } catch (err) {
       const message =
         err.response?.data?.error ||
         err.response?.data?.message ||
         err.message ||
-        "Error creating post";
+        'Error creating post';
       setError(message);
       setIsSubmitting(false);
     }
@@ -119,7 +127,7 @@ const CreatePost = () => {
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 4, mb: 6 }}>
         <Typography variant="h4" gutterBottom>
           Create New Post
         </Typography>
@@ -135,7 +143,7 @@ const CreatePost = () => {
             label="Title"
             fullWidth
             margin="normal"
-            {...register("title")}
+            {...register('title')}
             error={!!errors.title}
             helperText={errors.title?.message}
           />
@@ -146,30 +154,30 @@ const CreatePost = () => {
             margin="normal"
             multiline
             rows={3}
-            {...register("excerpt")}
+            {...register('excerpt')}
             error={!!errors.excerpt}
-            helperText={errors.excerpt?.message}
+            helperText={
+              errors.excerpt?.message ||
+              'Short preview shown in post listings (max 200 chars)'
+            }
           />
 
-          <FormControl fullWidth margin="normal">
+          <FormControl fullWidth margin="normal" error={!!errors.categories}>
             <InputLabel>Categories</InputLabel>
             <Select
               multiple
               value={selectedCategories}
               onChange={handleCategoryChange}
               renderValue={(selected) => (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(Array.isArray(selected) ? selected : []).map((value) => (
                     <Chip
                       key={value}
-                      label={
-                        categories.find((c) => c._id === value)?.name || value
-                      }
+                      label={categories.find((c) => c._id === value)?.name || value}
                     />
                   ))}
                 </Box>
               )}
-              error={!!errors.categories}
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
@@ -184,20 +192,36 @@ const CreatePost = () => {
             )}
           </FormControl>
 
-          <TextField
-            label="Content"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={12}
-            {...register("content")}
-            error={!!errors.content}
-            helperText={errors.content?.message}
-          />
+          {/*  content */}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Content
+            </Typography>
+            <RichTextEditor
+              value={contentHTML}
+              onChange={setContentHTML}
+              placeholder="Write your story... Click the image icon to upload from your device."
+            />
+            <Typography
+              variant="caption"
+              color={getTextLength(contentHTML) < 100 ? 'error' : 'text.secondary'}
+              sx={{ mt: 1, display: 'block' }}
+            >
+              {getTextLength(contentHTML)} characters (min 100)
+            </Typography>
+          </Box>
 
-          <Box sx={{ mt: 2 }}>
-            <Button type="submit" variant="contained" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Post"}
+          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              startIcon={isSubmitting ? <CircularProgress size={16} /> : null}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Post'}
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/posts')}>
+              Cancel
             </Button>
           </Box>
         </form>
