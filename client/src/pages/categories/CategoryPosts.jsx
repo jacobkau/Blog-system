@@ -44,29 +44,31 @@ const CategoryPosts = () => {
         console.error('Error parsing user data:', error);
       }
     }
-    
+
     fetchCategoryPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slugOrId]);
 
   const fetchCategoryPosts = async () => {
     try {
       setLoading(true);
-      
+
       // First, try to get the category by ID
       let categoryData;
       try {
         const response = await categoryService.getCategory(slugOrId);
-        categoryData = response.data?.data || response.data || response;
+        categoryData = response?.data?.data || response?.data || response;
         setCategory(categoryData);
       } catch (catError) {
         console.error("Category fetch error:", catError);
         setError("Category not found");
+        setLoading(false);
         return;
       }
 
       // Then fetch posts for this category
       const response = await postService.getPostsByCategory(slugOrId);
-      const postsData = response.data?.data || response.data || response;
+      const postsData = response?.data?.data || response?.data || response?.posts || response;
       setPosts(Array.isArray(postsData) ? postsData : []);
       setError(null);
     } catch (err) {
@@ -81,7 +83,6 @@ const CategoryPosts = () => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
         await postService.deletePost(postId);
-        // Remove post from state
         setPosts(posts.filter(post => post._id !== postId));
       } catch (err) {
         console.error("Delete error:", err);
@@ -92,15 +93,15 @@ const CategoryPosts = () => {
 
   const isPostOwner = (post) => {
     if (!user || !post.author) return false;
-    
+
     if (post.author._id) {
       return post.author._id === user.id || post.author._id === user._id;
     }
-    
+
     if (typeof post.author === 'string') {
       return post.author === user.id || post.author === user._id;
     }
-    
+
     return false;
   };
 
@@ -114,8 +115,8 @@ const CategoryPosts = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/categories")}
         >
@@ -168,8 +169,8 @@ const CategoryPosts = () => {
           </Typography>
         )}
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Chip 
-            label={`${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`} 
+          <Chip
+            label={`${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`}
             sx={{ backgroundColor: 'white', color: 'primary.main' }}
           />
           {category?.owner && (
@@ -243,7 +244,7 @@ const CategoryPosts = () => {
                   </Typography>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
-                      By: {post.author?.username || post.author?.email || 'Unknown'}
+                      By: {post.author?.name || post.author?.username || post.author?.email || 'Unknown'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {new Date(post.createdAt).toLocaleDateString()}
@@ -259,19 +260,19 @@ const CategoryPosts = () => {
                   >
                     Read More
                   </Button>
-                  
+
                   {/* Edit/Delete buttons for post owner or admin */}
                   {(isPostOwner(post) || isAdmin) && (
                     <Box>
                       <IconButton
                         size="small"
                         component={Link}
-                        to={`/posts/edit/${post._id}`}
+                        to={`/edit-post/${post._id}`}
                         sx={{ mr: 1 }}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      
+
                       <IconButton
                         size="small"
                         color="error"
