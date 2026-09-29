@@ -97,7 +97,7 @@ const Features = ({ features }) => {
                   width: 56,
                   height: 56,
                   borderRadius: '50%',
-                  backgroundColor: `${theme.palette.primary.main}14`, // ~8% opacity
+                  backgroundColor: `${theme.palette.primary.main}14`, 
                   color: theme.palette.primary.main,
                   mb: 2,
                   fontSize: '1.75rem',
@@ -251,7 +251,7 @@ const Home = () => {
       <Features features={features} />
 
       {/* ================================
-          How It Works + FAQ (side by side)
+          How It Works + FAQ 
          ================================ */}
       <Grid container spacing={4} sx={{ mb: 6, alignItems: 'flex-start' }}>
         {/* Left: How It Works */}
