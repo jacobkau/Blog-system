@@ -187,7 +187,7 @@ const CategoryPosts = () => {
             variant="contained"
             color="primary"
             component={Link}
-            to={`/posts/create?category=${category?._id}`}
+            to={`/create-post?category=${category?._id}`}
           >
             Create Post in this Category
           </Button>
@@ -207,7 +207,7 @@ const CategoryPosts = () => {
             <Button
               variant="contained"
               component={Link}
-              to={`/posts/create?category=${category?._id}`}
+              to={`/create-post?category=${category?._id}`}
             >
               Create New Post
             </Button>
