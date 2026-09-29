@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -18,7 +18,6 @@ import {
 import postService from "../../api/posts";
 import categoryService from "../../api/categories";
 import { useAuthContext } from "../../context";
-import Spinner from "../../components/ui/Spinner";
 
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
@@ -33,6 +32,9 @@ const schema = yup.object().shape({
 const CreatePost = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preSelectedCategory = searchParams.get("category");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
@@ -70,6 +72,14 @@ const CreatePost = () => {
     fetchCategories();
   }, []);
 
+  // ✅ Pre-select category if ?category=xxx is in the URL
+  useEffect(() => {
+    if (preSelectedCategory) {
+      setSelectedCategories([preSelectedCategory]);
+      setValue("categories", [preSelectedCategory], { shouldValidate: true });
+    }
+  }, [preSelectedCategory, setValue]);
+
   const handleCategoryChange = (event) => {
     const value = event.target.value;
     const safeArray = Array.isArray(value) ? value : [value];
@@ -85,10 +95,9 @@ const CreatePost = () => {
     }
 
     setIsSubmitting(true);
-    setError(""); 
+    setError("");
 
     try {
-  
       await postService.createPost({
         title: data.title,
         content: data.content,
@@ -98,7 +107,6 @@ const CreatePost = () => {
 
       navigate("/posts");
     } catch (err) {
-      
       const message =
         err.response?.data?.error ||
         err.response?.data?.message ||
