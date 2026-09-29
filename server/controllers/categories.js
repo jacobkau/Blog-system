@@ -12,10 +12,20 @@ export const getCategories = asyncHandler(async (req, res) => {
     select: 'name email',
   });
 
+  const categoriesWithCounts = await Promise.all(
+    categories.map(async (cat) => {
+      const count = await Post.countDocuments({ categories: cat._id });
+      return {
+        ...cat.toObject(),
+        postCount: count,
+      };
+    })
+  );
+
   res.status(200).json({
     success: true,
-    count: categories.length,
-    data: categories,
+    count: categoriesWithCounts.length,
+    data: categoriesWithCounts,
   });
 });
 
@@ -34,40 +44,40 @@ export const getCategory = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const postCount = await Post.countDocuments({ categories: category._id });
+
   res.status(200).json({
     success: true,
-    data: category,
+    data: {
+      ...category.toObject(),
+      postCount,
+    },
   });
 });
 
 // @desc    Create new category
 // @route   POST /api/categories
-// @access  Private/Admin
+// @access  Private
 export const createCategory = asyncHandler(async (req, res, next) => {
   const { name, description } = req.body;
 
-  // Basic input validation
   if (!name) {
     return next(new ErrorResponse('Please provide a category name', 400));
   }
 
-  // Check if category already exists
   const existingCategory = await Category.findOne({ name });
   if (existingCategory) {
-    return next(
-      new ErrorResponse(`Category '${name}' already exists`, 400)
-    );
+    return next(new ErrorResponse(`Category '${name}' already exists`, 400));
   }
 
-  // Ensure req.user exists (should be set by your auth middleware)
-  if (!req.user || !req.user.id) {
+  if (!req.user || !req.user._id) {
     return next(new ErrorResponse('Not authorized to create a category', 401));
   }
 
   const category = await Category.create({
     name,
     description,
-    owner: req.user.id, // <-- THE FIX: assign owner from authenticated user
+    owner: req.user._id,
   });
 
   res.status(201).json({
@@ -78,7 +88,7 @@ export const createCategory = asyncHandler(async (req, res, next) => {
 
 // @desc    Update category
 // @route   PUT /api/categories/:id
-// @access  Private/Admin
+// @access  Private
 export const updateCategory = asyncHandler(async (req, res, next) => {
   let category = await Category.findById(req.params.id);
 
@@ -88,17 +98,23 @@ export const updateCategory = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Only owner or admin can update
-  if (
-    category.owner.toString() !== req.user.id &&
-    req.user.role !== 'admin'
-  ) {
+  const isOwner =
+    category.owner && category.owner.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isOwner && !isAdmin) {
     return next(
       new ErrorResponse('Not authorized to update this category', 403)
     );
   }
 
-  category = await Category.findByIdAndUpdate(req.params.id, req.body, {
+
+  const { name, description } = req.body;
+  const updates = {};
+  if (name !== undefined) updates.name = name;
+  if (description !== undefined) updates.description = description;
+
+  category = await Category.findByIdAndUpdate(req.params.id, updates, {
     new: true,
     runValidators: true,
   });
@@ -111,7 +127,7 @@ export const updateCategory = asyncHandler(async (req, res, next) => {
 
 // @desc    Delete category
 // @route   DELETE /api/categories/:id
-// @access  Private/Admin
+// @access  Private
 export const deleteCategory = asyncHandler(async (req, res, next) => {
   const category = await Category.findById(req.params.id);
 
@@ -121,28 +137,27 @@ export const deleteCategory = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Check if user is owner or admin
-  if (
-    category.owner.toString() !== req.user.id &&
-    req.user.role !== 'admin'
-  ) {
+  const isOwner =
+    category.owner && category.owner.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isOwner && !isAdmin) {
     return next(
       new ErrorResponse('Not authorized to delete this category', 403)
     );
   }
 
-  // Check if category has posts
-  const postCount = await Post.countDocuments({ category: category._id });
+ 
+  const postCount = await Post.countDocuments({ categories: category._id });
   if (postCount > 0) {
     return next(
       new ErrorResponse(
-        'Cannot delete category with existing posts',
+        `Cannot delete category with ${postCount} existing post(s)`,
         400
       )
     );
   }
 
-  // Modern Mongoose: use deleteOne() instead of remove()
   await category.deleteOne();
 
   res.status(200).json({
