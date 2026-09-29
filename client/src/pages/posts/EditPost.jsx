@@ -14,36 +14,44 @@ import {
   Select,
   MenuItem,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import postService from '../../api/posts';
 import categoryService from '../../api/categories';
 import { useAuthContext } from '../../context';
 import Spinner from '../../components/ui/Spinner';
+import RichTextEditor from '../../components/editor/RichTextEditor';
 
 const schema = yup.object().shape({
   title: yup.string().required('Title is required'),
-  content: yup
+  excerpt: yup
     .string()
-    .required('Content is required')
-    .min(100, 'Content should be at least 100 characters'),
-  excerpt: yup.string().max(200, 'Excerpt must be less than 200 characters'),
+    .required('Excerpt is required')
+    .max(200, 'Excerpt must be less than 200 characters'),
   categories: yup.array().min(1, 'Select at least one category'),
 });
 
-const getCategoryIds = (arr) =>
+const getCategoryIds = (arr = []) =>
   arr.map((cat) =>
     typeof cat === 'object' && cat._id ? cat._id.toString() : cat.toString()
   );
+
+const getTextLength = (html = '') =>
+  html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
 
 const EditPost = () => {
   const { id } = useParams();
   const { user } = useAuthContext();
   const navigate = useNavigate();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [post, setPost] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Content lives in its own state (HTML)
+  const [contentHTML, setContentHTML] = useState('');
 
   const {
     register,
@@ -52,9 +60,7 @@ const EditPost = () => {
     setValue,
     watch,
     reset,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+  } = useForm({ resolver: yupResolver(schema) });
 
   useEffect(() => {
     if (!id || !/^[a-f\d]{24}$/i.test(id)) {
@@ -68,7 +74,8 @@ const EditPost = () => {
         setLoading(true);
 
         const postResponse = await postService.getPost(id);
-        setPost(postResponse.data);
+        const fetchedPost = postResponse.data;
+        setPost(fetchedPost);
 
         const categoriesResponse = await categoryService.getCategories();
         const catList = Array.isArray(categoriesResponse)
@@ -79,19 +86,21 @@ const EditPost = () => {
         setCategories(catList);
 
         reset({
-          title: postResponse.data.title,
-          content: postResponse.data.content,
-          excerpt: postResponse.data.excerpt,
-          categories: getCategoryIds(postResponse.data.categories || []),
+          title: fetchedPost.title,
+          excerpt: fetchedPost.excerpt,
+          categories: getCategoryIds(fetchedPost.categories || []),
         });
+
+        
+        setContentHTML(fetchedPost.content || '');
 
         setLoading(false);
       } catch (err) {
         console.error(err);
         setError(
           err.response?.data?.error ||
-          err.response?.data?.message ||
-          'Failed to load post data'
+            err.response?.data?.message ||
+            'Failed to load post data'
         );
         setLoading(false);
       }
@@ -103,39 +112,43 @@ const EditPost = () => {
   const onSubmit = async (data) => {
     if (!user) return;
 
+    if (getTextLength(contentHTML) < 100) {
+      setError('Content must be at least 100 characters.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
     try {
       await postService.updatePost(id, {
         title: data.title,
-        content: data.content,
+        content: contentHTML, 
         excerpt: data.excerpt,
         categories: data.categories,
       });
-
       navigate(`/posts/${id}`);
     } catch (err) {
       console.error('Update failed:', err);
       setError(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to update post'
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to update post'
       );
       setIsSubmitting(false);
     }
   };
 
   if (loading) return <Spinner />;
-  if (error) return <Typography color="error">{error}</Typography>;
+  if (error && !post) return <Typography color="error">{error}</Typography>;
   if (!post) return <Typography>Post not found</Typography>;
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 4, mb: 6 }}>
         <Typography variant="h4" gutterBottom>
-          Edit Post: {post.title}
+          Edit Post
         </Typography>
 
         {error && (
@@ -162,10 +175,13 @@ const EditPost = () => {
             rows={3}
             {...register('excerpt')}
             error={!!errors.excerpt}
-            helperText={errors.excerpt?.message}
+            helperText={
+              errors.excerpt?.message ||
+              'Short preview shown in post listings (max 200 chars)'
+            }
           />
 
-          <FormControl fullWidth margin="normal">
+          <FormControl fullWidth margin="normal" error={!!errors.categories}>
             <InputLabel>Categories</InputLabel>
             <Select
               multiple
@@ -178,14 +194,11 @@ const EditPost = () => {
                   {selected.map((value) => (
                     <Chip
                       key={value}
-                      label={
-                        categories.find((c) => c._id === value)?.name || value
-                      }
+                      label={categories.find((c) => c._id === value)?.name || value}
                     />
                   ))}
                 </Box>
               )}
-              error={!!errors.categories}
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
@@ -200,25 +213,35 @@ const EditPost = () => {
             )}
           </FormControl>
 
-          <TextField
-            label="Content"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={12}
-            {...register('content')}
-            error={!!errors.content}
-            helperText={errors.content?.message}
-          />
+          {/* content */}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Content
+            </Typography>
+            <RichTextEditor
+              value={contentHTML}
+              onChange={setContentHTML}
+              placeholder="Write your story... Click the image icon to upload from your device."
+            />
+            <Typography
+              variant="caption"
+              color={getTextLength(contentHTML) < 100 ? 'error' : 'text.secondary'}
+              sx={{ mt: 1, display: 'block' }}
+            >
+              {getTextLength(contentHTML)} characters (min 100)
+            </Typography>
+          </Box>
 
-          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Button type="submit" variant="contained" disabled={isSubmitting}>
+          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              startIcon={isSubmitting ? <CircularProgress size={16} /> : null}
+            >
               {isSubmitting ? 'Updating...' : 'Update Post'}
             </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate(`/posts/${id}`)}
-            >
+            <Button variant="outlined" onClick={() => navigate(`/posts/${id}`)}>
               Cancel
             </Button>
           </Box>
