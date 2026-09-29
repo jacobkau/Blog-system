@@ -62,8 +62,21 @@ mongoose
     process.exit(1);
   });
 
-// Test + health
 app.get('/', (req, res) => res.send('API is running...'));
+
+
+
+
+app.get('/api/cors-debug', (req, res) => {
+  res.json({
+    origin: req.headers.origin,
+    allowedOrigins,
+    ok: allowedOrigins.includes(req.headers.origin),
+  });
+});
+
+
+
 
 app.get('/api/health', async (req, res) => {
   try {
@@ -100,15 +113,6 @@ app.use((err, req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
-
-app.get('/api/cors-debug', (req, res) => {
-  res.json({
-    origin: req.headers.origin,
-    allowedOrigins,
-    ok: allowedOrigins.includes(req.headers.origin),
-  });
-});
-
   
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
@@ -120,6 +124,6 @@ app.get('/api/cors-debug', (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT} (${process.env.NODE_ENV})`)
+  console.log(`Server running on http://localhost:${PORT} (${process.env.NODE_ENV})`)
 );
 
