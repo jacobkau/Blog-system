@@ -13,7 +13,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Paper,
   useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -23,9 +25,138 @@ import {
   Book,
   TrendingUp,
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
 import { useAuthContext } from '../context';
 
+/* ============================================================
+   Features Section (separate component for clarity)
+   ============================================================ */
+const Features = ({ features }) => {
+  const theme = useTheme();
+
+  return (
+    <Box sx={{ mb: 8, px: { xs: 2, sm: 3, md: 4 } }}>
+      {/* Section heading */}
+      <Box sx={{ textAlign: 'center', mb: 5 }}>
+        <Typography
+          variant="overline"
+          sx={{
+            color: theme.palette.primary.main,
+            fontWeight: 700,
+            letterSpacing: 2,
+            display: 'block',
+            mb: 1,
+          }}
+        >
+          FEATURES
+        </Typography>
+        <Typography
+          variant="h4"
+          component="h2"
+          gutterBottom
+          sx={{
+            fontWeight: 700,
+            mb: 1.5,
+            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          Why Choose Our Platform
+        </Typography>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ maxWidth: 600, mx: 'auto' }}
+        >
+          Everything you need to publish, manage, and grow your blog — all in one place.
+        </Typography>
+      </Box>
+
+      {/* Feature cards */}
+      <Grid container spacing={3}>
+        {features.map((feature, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                height: '100%',
+                borderRadius: 3,
+                border: `1px solid ${theme.palette.divider}`,
+                background: `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
+                '&:hover': {
+                  transform: 'translateY(-6px)',
+                  boxShadow: theme.shadows[8],
+                  borderColor: theme.palette.primary.main,
+                  '&::before': {
+                    opacity: 1,
+                  },
+                },
+              }}
+            >
+              {/* Icon in a colored circle */}
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}22, ${theme.palette.secondary.main}22)`,
+                  color: theme.palette.primary.main,
+                  mb: 2,
+                  fontSize: '1.75rem',
+                  transition: 'transform 0.3s ease',
+                  '.MuiPaper-root:hover &': {
+                    transform: 'scale(1.1) rotate(-3deg)',
+                  },
+                }}
+              >
+                {feature.icon}
+              </Box>
+
+              <Typography
+                variant="h6"
+                component="h3"
+                sx={{ fontWeight: 600, mb: 1 }}
+              >
+                {feature.title}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ lineHeight: 1.7 }}
+              >
+                {feature.description}
+              </Typography>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+};
+
+/* ============================================================
+   Home Page
+   ============================================================ */
 const Home = () => {
   const { user } = useAuthContext();
   const theme = useTheme();
@@ -39,22 +170,22 @@ const Home = () => {
   const features = [
     {
       title: 'Easy Content Creation',
-      icon: <Create color="primary" />,
+      icon: <Create fontSize="inherit" />,
       description: 'Our intuitive editor makes writing and formatting posts a breeze.',
     },
     {
       title: 'Engage With Community',
-      icon: <People color="primary" />,
+      icon: <People fontSize="inherit" />,
       description: 'Connect with like-minded individuals through comments and reactions.',
     },
     {
       title: 'Organized Content',
-      icon: <Book color="primary" />,
+      icon: <Book fontSize="inherit" />,
       description: 'Categorize your posts for better discoverability.',
     },
     {
       title: 'Grow Your Audience',
-      icon: <TrendingUp color="primary" />,
+      icon: <TrendingUp fontSize="inherit" />,
       description: 'Reach readers who are passionate about your topics.',
     },
   ];
@@ -69,7 +200,9 @@ const Home = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
-      {/* Hero Section */}
+      {/* ================================
+          Hero Section
+         ================================ */}
       <Box
         sx={{
           textAlign: 'center',
@@ -133,50 +266,14 @@ const Home = () => {
         </Box>
       </Box>
 
-      {/* Platform Features */}
-      <Box sx={{ mb: 6 }}>
-        <Typography
-          variant="h4"
-          component="h2"
-          gutterBottom
-          sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}
-        >
-          Why Choose Our Platform
-        </Typography>
-        <Grid container spacing={3}>
-          {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Box
-                sx={{
-                  p: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderRadius: 2,
-                  border: `1px solid ${theme.palette.divider}`,
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: 3,
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  {feature.icon}
-                  <Typography variant="h6" component="h3" sx={{ ml: 1.5 }}>
-                    {feature.title}
-                  </Typography>
-                </Box>
-                <Typography variant="body1" color="text.secondary">
-                  {feature.description}
-                </Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+      {/* ================================
+          Features Section
+         ================================ */}
+      <Features features={features} />
 
-      {/* How It Works */}
+      {/* ================================
+          How It Works
+         ================================ */}
       <Box sx={{ mb: 6 }}>
         <Typography
           variant="h4"
@@ -200,7 +297,9 @@ const Home = () => {
         </Box>
       </Box>
 
-      {/* FAQ Section */}
+      {/* ================================
+          FAQ Section
+         ================================ */}
       <Box sx={{ mb: 6 }}>
         <Typography
           variant="h4"
@@ -267,7 +366,9 @@ const Home = () => {
         </Box>
       </Box>
 
-      {/* Final Call to Action */}
+      {/* ================================
+          Final Call to Action
+         ================================ */}
       <Box
         sx={{
           textAlign: 'center',
