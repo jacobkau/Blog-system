@@ -136,7 +136,7 @@ const SinglePost = () => {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* ✅ Rich content */}
+        {/*  Rich content */}
         <Box
           sx={{
             fontSize: '1.05rem',
