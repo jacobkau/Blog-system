@@ -101,6 +101,15 @@ app.use((err, req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
+app.get('/api/cors-debug', (req, res) => {
+  res.json({
+    origin: req.headers.origin,
+    allowedOrigins,
+    ok: allowedOrigins.includes(req.headers.origin),
+  });
+});
+
+  
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,
@@ -113,3 +122,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT} (${process.env.NODE_ENV})`)
 );
+
