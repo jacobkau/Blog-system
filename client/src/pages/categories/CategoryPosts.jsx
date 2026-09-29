@@ -1,6 +1,5 @@
-// components/categories/CategoryPosts.jsx
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -14,16 +13,24 @@ import {
   CardContent,
   CardActions,
   CardMedia,
-  IconButton
-} from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
-import CategoryIcon from "@mui/icons-material/Category";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import postService from "../../api/posts";
-import categoryService from "../../api/categories";
-import Spinner from "../../components/ui/Spinner";
+  IconButton,
+} from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import CategoryIcon from '@mui/icons-material/Category';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import postService from '../../api/posts';
+import categoryService from '../../api/categories';
+import Spinner from '../../components/ui/Spinner';
+
+// Strip HTML for text previews
+const stripHtml = (html = '') =>
+  html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const CategoryPosts = () => {
   const { slugOrId } = useParams();
@@ -35,7 +42,6 @@ const CategoryPosts = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Get user from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
@@ -44,64 +50,58 @@ const CategoryPosts = () => {
         console.error('Error parsing user data:', error);
       }
     }
-
     fetchCategoryPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slugOrId]);
 
   const fetchCategoryPosts = async () => {
     try {
       setLoading(true);
 
-      // First, try to get the category by ID
       let categoryData;
       try {
         const response = await categoryService.getCategory(slugOrId);
         categoryData = response?.data?.data || response?.data || response;
         setCategory(categoryData);
       } catch (catError) {
-        console.error("Category fetch error:", catError);
-        setError("Category not found");
+        console.error('Category fetch error:', catError);
+        setError('Category not found');
         setLoading(false);
         return;
       }
 
-      // Then fetch posts for this category
       const response = await postService.getPostsByCategory(slugOrId);
-      const postsData = response?.data?.data || response?.data || response?.posts || response;
+      const postsData =
+        response?.data?.data || response?.data || response?.posts || response;
       setPosts(Array.isArray(postsData) ? postsData : []);
       setError(null);
     } catch (err) {
-      console.error("Error fetching category posts:", err);
-      setError("Failed to load posts for this category");
+      console.error('Error fetching category posts:', err);
+      setError('Failed to load posts for this category');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeletePost = async (postId) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
+    if (window.confirm('Are you sure you want to delete this post?')) {
       try {
         await postService.deletePost(postId);
-        setPosts(posts.filter(post => post._id !== postId));
+        setPosts(posts.filter((post) => post._id !== postId));
       } catch (err) {
-        console.error("Delete error:", err);
-        alert("Failed to delete post");
+        console.error('Delete error:', err);
+        alert('Failed to delete post');
       }
     }
   };
 
   const isPostOwner = (post) => {
     if (!user || !post.author) return false;
-
     if (post.author._id) {
       return post.author._id === user.id || post.author._id === user._id;
     }
-
     if (typeof post.author === 'string') {
       return post.author === user.id || post.author === user._id;
     }
-
     return false;
   };
 
@@ -118,7 +118,7 @@ const CategoryPosts = () => {
         <Button
           variant="contained"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/categories")}
+          onClick={() => navigate('/categories')}
         >
           Back to Categories
         </Button>
@@ -128,38 +128,37 @@ const CategoryPosts = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Breadcrumb navigation */}
       <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-        <Button
-          color="inherit"
-          onClick={() => navigate("/")}
-          startIcon={<HomeIcon />}
-        >
+        <Button color="inherit" onClick={() => navigate('/')} startIcon={<HomeIcon />}>
           Home
         </Button>
         <Button
           color="inherit"
-          onClick={() => navigate("/categories")}
+          onClick={() => navigate('/categories')}
           startIcon={<CategoryIcon />}
         >
           Categories
         </Button>
-        <Typography color="text.primary">
-          {category?.name || "Category"}
-        </Typography>
+        <Typography color="text.primary">{category?.name || 'Category'}</Typography>
       </Breadcrumbs>
 
-      {/* Back button */}
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate("/categories")}
+        onClick={() => navigate('/categories')}
         sx={{ mb: 3 }}
       >
         Back to Categories
       </Button>
 
-      {/* Category header */}
-      <Box sx={{ mb: 4, p: 3, bgcolor: 'primary.light', color: 'white', borderRadius: 2 }}>
+      <Box
+        sx={{
+          mb: 4,
+          p: 3,
+          bgcolor: 'primary.light',
+          color: 'white',
+          borderRadius: 2,
+        }}
+      >
         <Typography variant="h3" component="h1" gutterBottom>
           {category?.name}
         </Typography>
@@ -181,7 +180,6 @@ const CategoryPosts = () => {
         </Box>
       </Box>
 
-      {/* Create post button for logged in users */}
       {user && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
           <Button
@@ -195,7 +193,6 @@ const CategoryPosts = () => {
         </Box>
       )}
 
-      {/* Posts grid */}
       {posts.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -213,79 +210,109 @@ const CategoryPosts = () => {
               Create New Post
             </Button>
           ) : (
-            <Button
-              variant="contained"
-              component={Link}
-              to="/login"
-            >
+            <Button variant="contained" component={Link} to="/login">
               Login to Create Post
             </Button>
           )}
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {posts.map((post) => (
-            <Grid item key={post._id} xs={12} sm={6} md={4}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                {post.featuredImage && (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={post.featuredImage}
-                    alt={post.title}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography gutterBottom variant="h5" component="h2">
-                    {post.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {post.excerpt || post.content?.substring(0, 150) || 'No content available'}...
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      By: {post.author?.name || post.author?.username || post.author?.email || 'Unknown'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  <Button
-                    size="small"
-                    color="primary"
-                    component={Link}
-                    to={`/posts/${post._id}`}
-                  >
-                    Read More
-                  </Button>
+          {posts.map((post) => {
+            const preview =
+              post.excerpt?.trim() ||
+              stripHtml(post.content).substring(0, 160) ||
+              'No content available';
 
-                  {/* Edit/Delete buttons for post owner or admin */}
-                  {(isPostOwner(post) || isAdmin) && (
-                    <Box>
-                      <IconButton
-                        size="small"
-                        component={Link}
-                        to={`/edit-post/${post._id}`}
-                        sx={{ mr: 1 }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
+            const hasImage =
+              post.featuredImage && post.featuredImage !== 'no-photo.jpg';
 
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeletePost(post._id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
+            return (
+              <Grid item key={post._id} xs={12} sm={6} md={4}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.25s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 4,
+                    },
+                  }}
+                >
+                  {hasImage && (
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={post.featuredImage}
+                      alt={post.title}
+                      sx={{ objectFit: 'cover' }}
+                    />
                   )}
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
+
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography gutterBottom variant="h6" component="h2">
+                      {post.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      {preview.length > 160
+                        ? `${preview.substring(0, 160)}...`
+                        : preview}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        By:{' '}
+                        {post.author?.name ||
+                          post.author?.username ||
+                          post.author?.email ||
+                          'Unknown'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+
+                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                    <Button
+                      size="small"
+                      color="primary"
+                      component={Link}
+                      to={`/posts/${post._id}`}
+                    >
+                      Read More
+                    </Button>
+
+                    {(isPostOwner(post) || isAdmin) && (
+                      <Box>
+                        <IconButton
+                          size="small"
+                          component={Link}
+                          to={`/edit-post/${post._id}`}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeletePost(post._id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </CardActions>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
       )}
     </Container>
