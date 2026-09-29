@@ -40,10 +40,10 @@ const Navbar = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
-  
+
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -61,54 +61,58 @@ const Navbar = ({ user, onLogout }) => {
     onLogout();
   };
 
+  
+  const getInitial = () =>
+    user?.name?.charAt(0)?.toUpperCase() ||
+    user?.username?.charAt(0)?.toUpperCase() ||
+    "U";
+
   // Mobile drawer content
-const drawerContent = (
-  <Box sx={{ width: 280, height: "100%" }} role="presentation">
-    {/* Logo and title */}
-    <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
-      <Box
-        sx={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          overflow: 'hidden',
-          boxShadow: 2,
-          border: '2px solid',
-          borderColor: 'primary.light',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+  const drawerContent = (
+    <Box sx={{ width: 280, height: "100%" }} role="presentation">
+      {/* Logo and title */}
+      <Box sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
         <Box
-          component="img"
-          src="/logo.png"
-          alt="Witty Blog Logo"
           sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            overflow: "hidden",
+            boxShadow: 2,
+            border: "2px solid",
+            borderColor: "primary.light",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-          onError={(e) => {
-            // Fallback to colored background
-            e.target.style.display = 'none';
-            e.target.parentElement.style.backgroundColor = 'primary.main';
-            e.target.parentElement.innerHTML = '<ArticleIcon style={{color: "white"}} />';
-          }}
-        />
+        >
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="Witty Blog Logo"
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.parentElement.style.backgroundColor = "primary.main";
+            }}
+          />
+        </Box>
+        <Box>
+          <Typography variant="h6" fontWeight={700} lineHeight={1}>
+            Witty Blog
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Management System
+          </Typography>
+        </Box>
       </Box>
-      <Box>
-        <Typography variant="h6" fontWeight={700} lineHeight={1}>
-          Witty Blog
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Management System
-        </Typography>
-      </Box>
-    </Box>
-    
-    <Divider />
-      
+
+      <Divider />
+
       {/* Navigation links */}
       <List>
         <ListItem disablePadding>
@@ -119,7 +123,7 @@ const drawerContent = (
             <ListItemText primary="Home" />
           </ListItemButton>
         </ListItem>
-        
+
         <ListItem disablePadding>
           <ListItemButton component={Link} to="/posts" onClick={handleDrawerToggle}>
             <ListItemIcon>
@@ -128,7 +132,7 @@ const drawerContent = (
             <ListItemText primary="Posts" />
           </ListItemButton>
         </ListItem>
-        
+
         <ListItem disablePadding>
           <ListItemButton component={Link} to="/categories" onClick={handleDrawerToggle}>
             <ListItemIcon>
@@ -137,7 +141,7 @@ const drawerContent = (
             <ListItemText primary="Categories" />
           </ListItemButton>
         </ListItem>
-        
+
         {user?.role === "admin" && (
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/dashboard" onClick={handleDrawerToggle}>
@@ -149,9 +153,9 @@ const drawerContent = (
           </ListItem>
         )}
       </List>
-      
+
       <Divider />
-      
+
       {/* User actions */}
       <List>
         {user ? (
@@ -164,7 +168,7 @@ const drawerContent = (
                 <ListItemText primary="New Post" />
               </ListItemButton>
             </ListItem>
-            
+
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/create-category" onClick={handleDrawerToggle}>
                 <ListItemIcon>
@@ -173,9 +177,9 @@ const drawerContent = (
                 <ListItemText primary="New Category" />
               </ListItemButton>
             </ListItem>
-            
+
             <Divider sx={{ my: 1 }} />
-            
+
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/profile" onClick={handleDrawerToggle}>
                 <ListItemIcon>
@@ -184,7 +188,7 @@ const drawerContent = (
                 <ListItemText primary="Profile" />
               </ListItemButton>
             </ListItem>
-            
+
             <ListItem disablePadding>
               <ListItemButton onClick={handleLogout}>
                 <ListItemIcon>
@@ -204,7 +208,7 @@ const drawerContent = (
                 <ListItemText primary="Login" />
               </ListItemButton>
             </ListItem>
-            
+
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/register" onClick={handleDrawerToggle}>
                 <ListItemIcon>
@@ -216,29 +220,47 @@ const drawerContent = (
           </>
         )}
       </List>
-      
-      {/* User info at bottom */}
+
+      {/* User info */}
       {user && (
         <>
           <Divider />
           <Box sx={{ p: 2, bgcolor: "action.hover" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-              <Avatar sx={{ bgcolor: "primary.main" }}>
-                {user?.name?.charAt(0) || user?.username?.charAt(0) || "U"}
+              <Avatar
+                src={user.avatar || undefined}
+                sx={{
+                  bgcolor: "primary.main",
+                  width: 40,
+                  height: 40,
+                  fontWeight: 600,
+                }}
+              >
+                {getInitial()}
               </Avatar>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={600}
+                  noWrap
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                >
                   {user?.name || user?.username || "User"}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
+                >
                   {user?.email}
                 </Typography>
               </Box>
             </Box>
             {user?.role && (
-              <Chip 
-                label={user.role} 
-                size="small" 
+              <Chip
+                label={user.role}
+                size="small"
                 color={user.role === "admin" ? "error" : "primary"}
                 sx={{ mt: 1 }}
               />
@@ -251,13 +273,13 @@ const drawerContent = (
 
   return (
     <>
-      <AppBar 
-        position="sticky" 
-        color="default" 
+      <AppBar
+        position="sticky"
+        color="default"
         elevation={1}
-        sx={{ 
+        sx={{
           backdropFilter: "blur(10px)",
-          backgroundColor: "rgba(255, 255, 255, 0.9)"
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
         }}
       >
         <Container maxWidth="xl">
@@ -275,8 +297,8 @@ const drawerContent = (
                 <MenuIcon />
               </IconButton>
             )}
-            
-            {/* Logo - responsive */}
+
+            {/* Logo */}
             <Typography
               variant={isMobile ? "h6" : "h5"}
               component={Link}
@@ -291,25 +313,23 @@ const drawerContent = (
                 gap: 1,
               }}
             >
-              <Avatar 
-                sx={{ 
-                  bgcolor: "primary.main", 
-                  width: { xs: 30, md: 36 }, 
+              <Avatar
+                sx={{
+                  bgcolor: "primary.main",
+                  width: { xs: 30, md: 36 },
                   height: { xs: 30, md: 36 },
-                  display: { xs: "none", sm: "flex" }
+                  display: { xs: "none", sm: "flex" },
                 }}
               >
                 <ArticleIcon fontSize={isMobile ? "small" : "medium"} />
               </Avatar>
-              <Box component="span" sx={{ 
-                display: { xs: "none", sm: "block" } 
-              }}>
+              <Box component="span" sx={{ display: { xs: "none", sm: "block" } }}>
                 Witty Blog
               </Box>
-              <Box component="span" sx={{ 
-                display: { xs: "block", sm: "none" },
-                fontSize: "0.9rem"
-              }}>
+              <Box
+                component="span"
+                sx={{ display: { xs: "block", sm: "none" }, fontSize: "0.9rem" }}
+              >
                 WB
               </Box>
             </Typography>
@@ -317,52 +337,36 @@ const drawerContent = (
             {/* Desktop navigation */}
             {!isMobile && (
               <Box sx={{ flexGrow: 1, display: "flex", gap: 1 }}>
-                <Button 
-                  component={Link} 
-                  to="/" 
+                <Button
+                  component={Link}
+                  to="/"
                   startIcon={<HomeIcon />}
-                  sx={{ 
-                    textTransform: "none",
-                    fontWeight: 500,
-                    px: 2
-                  }}
+                  sx={{ textTransform: "none", fontWeight: 500, px: 2 }}
                 >
                   Home
                 </Button>
-                <Button 
-                  component={Link} 
-                  to="/posts" 
+                <Button
+                  component={Link}
+                  to="/posts"
                   startIcon={<ArticleIcon />}
-                  sx={{ 
-                    textTransform: "none",
-                    fontWeight: 500,
-                    px: 2
-                  }}
+                  sx={{ textTransform: "none", fontWeight: 500, px: 2 }}
                 >
                   Posts
                 </Button>
-                <Button 
-                  component={Link} 
-                  to="/categories" 
+                <Button
+                  component={Link}
+                  to="/categories"
                   startIcon={<CategoryIcon />}
-                  sx={{ 
-                    textTransform: "none",
-                    fontWeight: 500,
-                    px: 2
-                  }}
+                  sx={{ textTransform: "none", fontWeight: 500, px: 2 }}
                 >
                   Categories
                 </Button>
                 {user?.role === "admin" && (
-                  <Button 
-                    component={Link} 
-                    to="/dashboard" 
+                  <Button
+                    component={Link}
+                    to="/dashboard"
                     startIcon={<DashboardIcon />}
-                    sx={{ 
-                      textTransform: "none",
-                      fontWeight: 500,
-                      px: 2
-                    }}
+                    sx={{ textTransform: "none", fontWeight: 500, px: 2 }}
                   >
                     Dashboard
                   </Button>
@@ -381,10 +385,7 @@ const drawerContent = (
                       component={Link}
                       to="/create-post"
                       size="small"
-                      sx={{ 
-                        textTransform: "none",
-                        borderRadius: 2
-                      }}
+                      sx={{ textTransform: "none", borderRadius: 2 }}
                     >
                       New Post
                     </Button>
@@ -394,14 +395,11 @@ const drawerContent = (
                       component={Link}
                       to="/create-category"
                       size="small"
-                      sx={{ 
-                        textTransform: "none",
-                        borderRadius: 2
-                      }}
+                      sx={{ textTransform: "none", borderRadius: 2 }}
                     >
                       New Category
                     </Button>
-                    
+
                     <Tooltip title="Account">
                       <IconButton
                         onClick={handleProfileMenuOpen}
@@ -414,22 +412,25 @@ const drawerContent = (
                           variant="dot"
                           color="success"
                         >
+                          {/* Desktop navbar */}
                           <Avatar
+                            src={user.avatar || undefined}
                             sx={{
                               width: 36,
                               height: 36,
                               bgcolor: "primary.main",
                               cursor: "pointer",
                               border: "2px solid",
-                              borderColor: "background.paper"
+                              borderColor: "background.paper",
+                              fontWeight: 600,
                             }}
                           >
-                            {user?.name?.charAt(0) || user?.username?.charAt(0) || "U"}
+                            {getInitial()}
                           </Avatar>
                         </Badge>
                       </IconButton>
                     </Tooltip>
-                    
+
                     <Menu
                       anchorEl={profileAnchorEl}
                       open={Boolean(profileAnchorEl)}
@@ -467,9 +468,9 @@ const drawerContent = (
                         </Typography>
                       </Box>
                       <Divider />
-                      <MenuItem 
-                        component={Link} 
-                        to="/profile" 
+                      <MenuItem
+                        component={Link}
+                        to="/profile"
                         onClick={handleProfileMenuClose}
                       >
                         <ListItemIcon>
@@ -478,9 +479,9 @@ const drawerContent = (
                         Profile
                       </MenuItem>
                       {user?.role === "admin" && (
-                        <MenuItem 
-                          component={Link} 
-                          to="/dashboard" 
+                        <MenuItem
+                          component={Link}
+                          to="/dashboard"
                           onClick={handleProfileMenuClose}
                         >
                           <ListItemIcon>
@@ -506,10 +507,7 @@ const drawerContent = (
                       component={Link}
                       to="/login"
                       size="small"
-                      sx={{ 
-                        textTransform: "none",
-                        borderRadius: 2
-                      }}
+                      sx={{ textTransform: "none", borderRadius: 2 }}
                     >
                       Login
                     </Button>
@@ -519,10 +517,7 @@ const drawerContent = (
                       component={Link}
                       to="/register"
                       size="small"
-                      sx={{ 
-                        textTransform: "none",
-                        borderRadius: 2
-                      }}
+                      sx={{ textTransform: "none", borderRadius: 2 }}
                     >
                       Register
                     </Button>
@@ -530,19 +525,21 @@ const drawerContent = (
                 )}
               </Box>
             ) : (
-              /* Mobile user actions (avatar only) */
+              /*  Mobile user actions  */
               user && (
                 <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "flex-end" }}>
                   <IconButton onClick={handleProfileMenuOpen} size="small">
                     <Avatar
+                      src={user.avatar || undefined}
                       sx={{
                         width: 32,
                         height: 32,
                         bgcolor: "primary.main",
-                        fontSize: "0.875rem"
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
                       }}
                     >
-                      {user?.name?.charAt(0) || user?.username?.charAt(0) || "U"}
+                      {getInitial()}
                     </Avatar>
                   </IconButton>
                 </Box>
@@ -558,7 +555,7 @@ const drawerContent = (
         open={drawerOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better mobile performance
+          keepMounted: true,
         }}
         sx={{
           display: { xs: "block", md: "none" },
