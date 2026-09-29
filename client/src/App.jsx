@@ -21,24 +21,23 @@ import NotFound from './pages/NotFound';
 
 function App() {
   return (
-   <>
+    <>
       <Layout>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
-          <Route path="/posts" element={<Posts />} />
+            <Route path="/posts" element={<Posts />} />
+            <Route path="/create-post" element={<CreatePost />} />
             <Route path="/posts/:id" element={<SinglePost />} />
             <Route path="/edit-post/:id" element={<EditPost />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/category/:slugOrId" element={<CategoryPosts />} />
             <Route path="/create-category" element={<CreateCategory />} />
-            <Route path="/create-post" element={<CreatePost />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 
@@ -47,7 +46,7 @@ function App() {
         </Routes>
       </Layout>
 
-      <ToastContainer 
+      <ToastContainer
         position="top-center"
         autoClose={5000}
         hideProgressBar={false}
