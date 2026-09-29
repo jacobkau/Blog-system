@@ -77,10 +77,8 @@ const Categories = () => {
     try {
       await categoryService.deleteCategory(categoryToDelete._id);
       
-      // Update local state
       setCategories(categories.filter(cat => cat._id !== categoryToDelete._id));
-      
-      // Show success message
+    
       setSnackbar({
         open: true,
         message: 'Category deleted successfully',
@@ -108,16 +106,13 @@ const Categories = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // Check if current user is the owner of a category
   const isCategoryOwner = (category) => {
     if (!user || !category.owner) return false;
     
-    // If owner is stored as object with _id
     if (category.owner._id) {
       return category.owner._id === user.id || category.owner._id === user._id;
     }
     
-    // If owner is stored as string ID
     if (typeof category.owner === 'string') {
       return category.owner === user.id || category.owner === user._id;
     }
@@ -125,7 +120,6 @@ const Categories = () => {
     return false;
   };
 
-  // Check if user is admin (optional additional permission)
   const isAdmin = user?.role === 'admin' || user?.isAdmin;
 
   if (loading) return <Spinner />;
@@ -244,7 +238,7 @@ const Categories = () => {
                           size="small"
                           color="error"
                           onClick={() => handleDeleteClick(category)}
-                          disabled={category.postCount > 0} // Disable if category has posts
+                          disabled={category.postCount > 0} 
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
