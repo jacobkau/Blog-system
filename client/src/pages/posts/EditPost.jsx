@@ -20,7 +20,6 @@ import categoryService from '../../api/categories';
 import { useAuthContext } from '../../context';
 import Spinner from '../../components/ui/Spinner';
 
-// Validation schema
 const schema = yup.object().shape({
   title: yup.string().required('Title is required'),
   content: yup
@@ -35,9 +34,6 @@ const getCategoryIds = (arr) =>
   arr.map((cat) =>
     typeof cat === 'object' && cat._id ? cat._id.toString() : cat.toString()
   );
-
-const arraysEqual = (a, b) =>
-  a.length === b.length && a.every((val) => b.includes(val));
 
 const EditPost = () => {
   const { id } = useParams();
@@ -61,6 +57,12 @@ const EditPost = () => {
   });
 
   useEffect(() => {
+    if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+      setError('Invalid post ID');
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -69,19 +71,28 @@ const EditPost = () => {
         setPost(postResponse.data);
 
         const categoriesResponse = await categoryService.getCategories();
-        setCategories(categoriesResponse.data);
+        const catList = Array.isArray(categoriesResponse)
+          ? categoriesResponse
+          : Array.isArray(categoriesResponse?.data)
+          ? categoriesResponse.data
+          : [];
+        setCategories(catList);
 
         reset({
           title: postResponse.data.title,
           content: postResponse.data.content,
           excerpt: postResponse.data.excerpt,
-          categories: getCategoryIds(postResponse.data.categories),
+          categories: getCategoryIds(postResponse.data.categories || []),
         });
 
         setLoading(false);
       } catch (err) {
         console.error(err);
-        setError(err.response?.data?.message || 'Failed to load post data');
+        setError(
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Failed to load post data'
+        );
         setLoading(false);
       }
     };
@@ -93,49 +104,24 @@ const EditPost = () => {
     if (!user) return;
 
     setIsSubmitting(true);
+    setError('');
+
     try {
-      const preUpdate = await postService.getPost(id);
-      console.log('Pre-update state:', preUpdate.data);
-
-      const response = await postService.updatePost(
-        id,
-        { ...data, author: user.id },
-        user.token
-      );
-      console.log('Update response:', response);
-
-      const verification = await postService.getPost(id, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        },
+      await postService.updatePost(id, {
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        categories: data.categories,
       });
-      console.log('Verification data:', verification.data);
-
-      const changes = {
-        title: verification.data.title !== preUpdate.data.title,
-        excerpt: verification.data.excerpt !== preUpdate.data.excerpt,
-        categories: !arraysEqual(
-          getCategoryIds(verification.data.categories),
-          getCategoryIds(preUpdate.data.categories)
-        ),
-      };
-
-      console.log('Actual changes detected:', changes);
-
-      if (!Object.values(changes).some((v) => v)) {
-        throw new Error(
-          'Database write verification failed - changes not persisted'
-        );
-      }
 
       navigate(`/posts/${id}`);
     } catch (err) {
       console.error('Update failed:', err);
       setError(
-        err.message.includes('verification')
-          ? 'Changes not saved to database (verify backend logs)'
-          : err.message
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to update post'
       );
       setIsSubmitting(false);
     }
