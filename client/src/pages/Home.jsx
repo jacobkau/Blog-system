@@ -34,7 +34,7 @@ const Features = ({ features }) => {
   const theme = useTheme();
 
   return (
-    <Box sx={{ mb: 8, px: { xs: 1, sm: 2, md: 3 } }}>
+    <Box sx={{ mb: 8 }}>
       {/* Section heading */}
       <Box sx={{ textAlign: 'center', mb: 5 }}>
         <Typography
@@ -67,20 +67,31 @@ const Features = ({ features }) => {
       </Box>
 
       {/* Feature cards */}
-      <Grid container spacing={3}>
+      <Grid
+        container
+        spacing={3}
+        sx={{ alignItems: 'stretch' }}
+      >
         {features.map((feature, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md={3}
+            key={feature.title || index}
+            sx={{ display: 'flex' }}
+          >
             <Paper
               elevation={0}
               sx={{
                 p: 3,
-                height: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 borderRadius: 3,
                 border: `1px solid ${theme.palette.divider}`,
                 background: theme.palette.background.paper,
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                position: 'relative',
-                overflow: 'hidden',
                 '&:hover': {
                   transform: 'translateY(-6px)',
                   boxShadow: theme.shadows[6],
@@ -97,7 +108,7 @@ const Features = ({ features }) => {
                   width: 56,
                   height: 56,
                   borderRadius: '50%',
-                  backgroundColor: `${theme.palette.primary.main}14`, 
+                  backgroundColor: `${theme.palette.primary.main}14`,
                   color: theme.palette.primary.main,
                   mb: 2,
                   fontSize: '1.75rem',
@@ -251,11 +262,15 @@ const Home = () => {
       <Features features={features} />
 
       {/* ================================
-          How It Works + FAQ 
+          How It Works + FAQ (side by side)
          ================================ */}
-      <Grid container spacing={4} sx={{ mb: 6, alignItems: 'flex-start' }}>
+      <Grid
+        container
+        spacing={4}
+        sx={{ mb: 6, alignItems: 'flex-start' }}
+      >
         {/* Left: How It Works */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={4}>
           <Typography
             variant="h4"
             component="h2"
@@ -264,14 +279,21 @@ const Home = () => {
           >
             How It Works
           </Typography>
-          <Box sx={{ maxWidth: 480, mx: 'auto' }}>
-            <List>
+          <Box sx={{ mx: 'auto' }}>
+            <List sx={{ width: '100%' }}>
               {howItWorks.map((step, index) => (
-                <ListItem key={index} sx={{ py: 1.5 }}>
-                  <ListItemIcon>
-                    <CheckCircle color="primary" />
+                <ListItem
+                  key={index}
+                  disableGutters
+                  sx={{ py: 1.5, alignItems: 'flex-start' }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36, mt: 0.5 }}>
+                    <CheckCircle color="primary" fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={step} />
+                  <ListItemText
+                    primary={step}
+                    primaryTypographyProps={{ variant: 'body1' }}
+                  />
                 </ListItem>
               ))}
             </List>
@@ -279,7 +301,7 @@ const Home = () => {
         </Grid>
 
         {/* Right: FAQ */}
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} md={8}>
           <Typography
             variant="h4"
             component="h2"
@@ -288,10 +310,11 @@ const Home = () => {
           >
             Frequently Asked Questions
           </Typography>
-          <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+          <Box sx={{ mx: 'auto' }}>
             <Accordion
               expanded={expandedPanel === 'panel1'}
               onChange={handleAccordionChange('panel1')}
+              disableGutters
             >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography fontWeight={500}>
@@ -310,6 +333,7 @@ const Home = () => {
             <Accordion
               expanded={expandedPanel === 'panel2'}
               onChange={handleAccordionChange('panel2')}
+              disableGutters
             >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography fontWeight={500}>
@@ -328,6 +352,7 @@ const Home = () => {
             <Accordion
               expanded={expandedPanel === 'panel3'}
               onChange={handleAccordionChange('panel3')}
+              disableGutters
             >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography fontWeight={500}>
