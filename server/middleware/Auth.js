@@ -5,11 +5,11 @@ import User from '../models/User.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  // 1. Read from cookie (for browser clients)
+  // 1. Read from cookie
   if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
   }
-  // 2. Fall back to Authorization header (Postman, mobile, APIs)
+  // 2. Fall back to Authorization header
   else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
@@ -23,8 +23,6 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Do NOT select +password here
     req.user = await User.findById(decoded.id);
 
     if (!req.user) {
@@ -54,7 +52,30 @@ export const authorize = (...roles) => {
   };
 };
 
+//  CORS headers on every error response
 export const errorHandler = (err, req, res, next) => {
+  console.error('🚨 Error:', err.message);
+
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://blog-system-ochre.vercel.app',
+  ];
+
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET,POST,PUT,DELETE,PATCH,OPTIONS'
+    );
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
+  }
+
   const statusCode = err.statusCode || 500;
 
   res.status(statusCode).json({
