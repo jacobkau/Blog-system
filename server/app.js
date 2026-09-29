@@ -8,6 +8,7 @@ import postsRouter from './routes/posts.js';
 import categoriesRouter from './routes/categories.js';
 import authRouter from './routes/auth.js';
 import { errorHandler } from './middleware/Auth.js'; 
+import uploadsRouter from './routes/uploads.js';
 
 dotenv.config();
 
@@ -68,7 +69,7 @@ app.get('/api/health', async (req, res) => {
     });
   }
 });
-
+app.use('/api/uploads', uploadsRouter);
 app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
