@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Typography, 
+import emailjs from '@emailjs/browser';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
   Box,
   Link,
   Alert,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import useAuthContext from '../../context/useAuthContext';
 
 const Register = () => {
-  // Proper hook declarations at the top level
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    passwordConfirm: ''
+    passwordConfirm: '',
   });
   const [loading, setLoading] = useState(false);
   const { register, error } = useAuthContext();
@@ -32,29 +32,51 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-const onSubmit = async (e) => {
-  e.preventDefault();
-  if (loading) return;
-  
-  if (password !== passwordConfirm) {
-    toast.error('Passwords do not match');
-    return;
-  }
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
 
-  setLoading(true);
-  try {
-    await register({ name, email, password });
-    toast.success('Registration successful! Redirecting...');
-    setTimeout(() => navigate('/'), 2000);
-  } catch (err) {
-    const errorMsg = err.response?.data?.error || 
-                    err.message || 
-                    'Registration failed! Please try a new Email / Name';
-    toast.error(errorMsg);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (password !== passwordConfirm) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Register the user 
+      await register({ name, email, password });
+
+      //  Send welcome email — don't fail registration if the email fails
+      try {
+        await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_WELCOME_TEMPLATE_ID,
+          {
+            to_name: name,
+            to_email: email,
+            from_name: 'Witty Blog Team',
+            site_url: window.location.origin,
+            current_year: new Date().getFullYear(),
+          },
+          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+      } catch (emailErr) {
+        // Log quietly — user is registered regardless
+        console.error('Welcome email failed:', emailErr?.text || emailErr?.message);
+      }
+
+      toast.success('Registration successful! Welcome aboard 🎉');
+      setTimeout(() => navigate('/'), 2000);
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.error ||
+        err.message ||
+        'Registration failed! Please try a new Email / Name';
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Container maxWidth="sm">
@@ -66,10 +88,14 @@ const onSubmit = async (e) => {
           Join our community
         </Typography>
       </Box>
-      
+
       <Box component="form" onSubmit={onSubmit} sx={{ mt: 3 }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <TextField
           label="Full Name"
           name="name"
@@ -109,7 +135,7 @@ const onSubmit = async (e) => {
           margin="normal"
           required
         />
-        
+
         <Button
           type="submit"
           variant="contained"
@@ -120,24 +146,14 @@ const onSubmit = async (e) => {
         >
           {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
         </Button>
-        
-        {/* Forgot Password Link */}
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                component="a"
-                href="/forgot-password"
-                color="primary"
-                size="small"
-                disabled={isSubmitting}
-              >
-                Forgot Password?
-              </Button>
-            </Box>
 
-          {/* Login Link */}
+        {/* Login link */}
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="body2">
-            Already have an account? <Link href="/login">Sign in</Link>
+            Already have an account?{' '}
+            <Link component={RouterLink} to="/login">
+              Sign in
+            </Link>
           </Typography>
         </Box>
       </Box>
