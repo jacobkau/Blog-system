@@ -46,7 +46,15 @@ const updatePassword = async (data) => {
   const response = await apiClient.put('updatepassword', data);
   return response.data;
 };
+const forgotPassword = async (email) => {
+  const response = await apiClient.post('forgot-password', { email });
+  return response.data;
+};
 
+const resetPassword = async (token, password) => {
+  const response = await apiClient.put(`reset-password/${token}`, { password });
+  return response.data;
+};
 // Upload avatar (requires backend route, see below)
 const uploadAvatar = async (formData) => {
   const response = await apiClient.put('avatar', formData, {
@@ -62,5 +70,7 @@ export default {
   getMe,
   updateDetails,
   updatePassword,
+  forgotPassword,
+  resetPassword,
   uploadAvatar,
 };
