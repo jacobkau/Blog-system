@@ -5,6 +5,8 @@ import {
   getMe,
   logout,
   updateDetails,
+  forgotPassword,   
+  resetPassword,    
   updatePassword,
 } from '../controllers/auth.js';
 import { protect } from '../middleware/Auth.js';
@@ -21,5 +23,7 @@ router.get('/logout', logout);
 router.get('/me', protect, getMe);
 router.post('/updatedetails', protect, updateDetails);
 router.post('/updatepassword', protect, updatePassword);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:token', resetPassword);
 
 export default router;
