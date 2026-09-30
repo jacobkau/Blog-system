@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Grid,
@@ -25,11 +25,13 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { Link } from 'react-router-dom';
 import categoryService from '../../api/categories';
 import Spinner from '../../components/ui/Spinner';
+import SearchBar from '../../components/ui/SearchBar';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');       
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [snackbar, setSnackbar] = useState({
@@ -65,6 +67,18 @@ const Categories = () => {
       setLoading(false);
     }
   };
+
+  // Filter categories by search query (name + description)
+  const filteredCategories = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return categories;
+
+    return categories.filter((cat) => {
+      const name = (cat.name || '').toLowerCase();
+      const desc = (cat.description || '').toLowerCase();
+      return name.includes(q) || desc.includes(q);
+    });
+  }, [categories, searchQuery]);
 
   const handleDeleteClick = (category) => {
     setCategoryToDelete(category);
@@ -122,12 +136,15 @@ const Categories = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 4,
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 2,
         }}
       >
         <Typography variant="h4" component="h1">
@@ -146,12 +163,22 @@ const Categories = () => {
         )}
       </Box>
 
+      {/* ✅ Search bar */}
+      <Box sx={{ mb: 3, maxWidth: 480 }}>
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search categories by name or description..."
+        />
+      </Box>
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
+      {/* Empty states */}
       {categories.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
@@ -168,132 +195,148 @@ const Categories = () => {
             </Button>
           )}
         </Box>
+      ) : filteredCategories.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No categories match "{searchQuery}"
+          </Typography>
+          <Button variant="outlined" onClick={() => setSearchQuery('')}>
+            Clear search
+          </Button>
+        </Box>
       ) : (
-        <Grid container spacing={4}>
-          {categories.map((category) => (
-            <Grid
-              size={{ xs: 12, sm: 6, md: 4, lg: 3 }}   
-              key={category._id}
-            >
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.25s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 4,
-                  },
-                }}
+        <>
+          {/* Result count when searching */}
+          {searchQuery && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Showing {filteredCategories.length} of {categories.length} categories
+            </Typography>
+          )}
+
+          <Grid container spacing={4}>
+            {filteredCategories.map((category) => (
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                key={category._id}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Top row */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      component="h2"
-                      fontWeight={600}
-                      sx={{ pr: 1 }}
-                    >
-                      {category.name}
-                    </Typography>
-
-                    {(isCategoryOwner(category) || isAdmin) && (
-                      <Chip
-                        label={isAdmin ? 'Admin' : 'Owner'}
-                        color="primary"
-                        size="small"
-                      />
-                    )}
-                  </Box>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      mb: 2,
-                      minHeight: 40,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {category.description || 'No description available'}
-                  </Typography>
-
-                  {/* Post count */}
-                  {category.postCount !== undefined && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <ArticleIcon fontSize="small" color="action" />
-                      <Typography variant="caption" color="text.secondary">
-                        {category.postCount}{' '}
-                        {category.postCount === 1 ? 'post' : 'posts'}
-                      </Typography>
-                    </Box>
-                  )}
-                </CardContent>
-
-                <Divider />
-
-                <CardActions
+                <Card
                   sx={{
-                    px: 2,
-                    py: 1.5,
-                    justifyContent: 'space-between',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.25s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 4,
+                    },
                   }}
                 >
-                  <Button
-                    component={Link}
-                    to={`/category/${category.slug || category._id}`}
-                    size="small"
-                    color="primary"
-                  >
-                    View Posts
-                  </Button>
-
-                  {(isCategoryOwner(category) || isAdmin) && (
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        component={Link}
-                        to={`/categories/edit/${category._id}`}
-                        title="Edit category"
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        mb: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        component="h2"
+                        fontWeight={600}
+                        sx={{ pr: 1 }}
                       >
-                        <EditIcon fontSize="small" /> Edit
-                      </IconButton>
+                        {category.name}
+                      </Typography>
 
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(category)}
-                        disabled={category.postCount > 0}
-                        title={
-                          category.postCount > 0
-                            ? 'Cannot delete category with posts'
-                            : 'Delete category'
-                        }
-                      >
-                        <DeleteIcon fontSize="small" /> Delete
-                      </IconButton>
+                      {(isCategoryOwner(category) || isAdmin) && (
+                        <Chip
+                          label={isAdmin ? 'Admin' : 'Owner'}
+                          color="primary"
+                          size="small"
+                        />
+                      )}
                     </Box>
-                  )}
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mb: 2,
+                        minHeight: 40,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {category.description || 'No description available'}
+                    </Typography>
+
+                    {category.postCount !== undefined && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ArticleIcon fontSize="small" color="action" />
+                        <Typography variant="caption" color="text.secondary">
+                          {category.postCount}{' '}
+                          {category.postCount === 1 ? 'post' : 'posts'}
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+
+                  <Divider />
+
+                  <CardActions
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Button
+                      component={Link}
+                      to={`/category/${category.slug || category._id}`}
+                      size="small"
+                      color="primary"
+                    >
+                      View Posts
+                    </Button>
+
+                    {(isCategoryOwner(category) || isAdmin) && (
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <IconButton
+                          size="small"
+                          component={Link}
+                          to={`/categories/edit/${category._id}`}
+                          title="Edit category"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(category)}
+                          disabled={category.postCount > 0}
+                          title={
+                            category.postCount > 0
+                              ? 'Cannot delete category with posts'
+                              : 'Delete category'
+                          }
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
