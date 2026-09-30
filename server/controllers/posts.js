@@ -16,21 +16,54 @@ const stripHtml = (html = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
-// @desc    Get all posts
+const escapeRegex = (str = '') =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildPostQuery = (req) => {
+  const query = {};
+  const { search, author, category } = req.query;
+
+  // Full-text-ish search across multiple fields
+  if (search && search.trim()) {
+    const regex = new RegExp(escapeRegex(search.trim()), 'i');
+    query.$or = [
+      { title: regex },
+      { excerpt: regex },
+      { content: regex },
+    ];
+  }
+
+  // Filter by author id
+  if (author && mongoose.Types.ObjectId.isValid(author)) {
+    query.author = author;
+  }
+
+  // Filter by category id
+  if (category && mongoose.Types.ObjectId.isValid(category)) {
+    query.categories = category;
+  }
+
+  return query;
+};
+
+// @desc    Get all posts (with optional search + filters)
 // @route   GET /api/posts
 // @access  Public
 export const getPosts = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const query = buildPostQuery(req);
 
   const [posts, total] = await Promise.all([
-    Post.find()
-      .skip((page - 1) * limit)
+    Post.find(query)
+      .skip(skip)
       .limit(limit)
       .sort(req.query.sort || '-createdAt')
       .populate('author', 'name email')
       .populate('categories', 'name'),
-    Post.countDocuments(),
+    Post.countDocuments(query),
   ]);
 
   res.status(200).json({
@@ -39,13 +72,13 @@ export const getPosts = asyncHandler(async (req, res) => {
     data: posts,
     pagination: {
       total,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(total / limit) || 1,
       page,
     },
   });
 });
 
-// @desc    Get posts by category
+// @desc    Get posts by category (with optional search)
 // @route   GET /api/posts/category/:categoryId
 // @access  Public
 export const getPostsByCategory = asyncHandler(async (req, res, next) => {
@@ -62,7 +95,15 @@ export const getPostsByCategory = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const posts = await Post.find({ categories: categoryId })
+  const query = { categories: categoryId };
+
+  // Optional search inside category
+  if (req.query.search && req.query.search.trim()) {
+    const regex = new RegExp(escapeRegex(req.query.search.trim()), 'i');
+    query.$or = [{ title: regex }, { excerpt: regex }, { content: regex }];
+  }
+
+  const posts = await Post.find(query)
     .populate('categories', 'name')
     .populate('author', 'name email')
     .sort('-createdAt');
@@ -156,7 +197,6 @@ export const updatePost = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // ✅ Whitelist fields + regenerate excerpt if content changed
   const { title, content, excerpt, categories, featuredImage } = req.body;
 
   if (title !== undefined) post.title = title;
@@ -165,8 +205,6 @@ export const updatePost = asyncHandler(async (req, res, next) => {
 
   if (content !== undefined) {
     post.content = content;
-
-    // Regenerate excerpt if user didn't send one, or if they changed content
     const plainText = stripHtml(content);
     post.excerpt =
       (excerpt && stripHtml(excerpt).substring(0, 200)) ||
