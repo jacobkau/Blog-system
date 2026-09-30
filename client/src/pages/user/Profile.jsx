@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
@@ -24,6 +25,7 @@ import {
   Lock as LockIcon,
   Logout as LogoutIcon,
   Close as CloseIcon,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { useAuthContext } from '../../context';
 import authService from '../../api/auth';
@@ -36,6 +38,9 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -52,7 +57,6 @@ const Profile = () => {
     confirmPassword: '',
   });
 
-  // Keep form in sync if user updates elsewhere
   useEffect(() => {
     if (user) {
       setFormData({
@@ -76,7 +80,6 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       const response = await authService.updateDetails({
         name: formData.name,
@@ -85,21 +88,17 @@ const Profile = () => {
         location: formData.location,
         website: formData.website,
       });
-
       const updatedUser = response.data;
       localStorage.setItem('user', JSON.stringify(updatedUser));
-
-      // Update context so navbar & everywhere else reflects new name
       setAuthState((prev) => ({ ...prev, user: updatedUser }));
-
       toast.success('Profile updated successfully');
       setIsEditing(false);
     } catch (err) {
-      const msg =
+      toast.error(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        'Failed to update profile';
-      toast.error(msg);
+          err.response?.data?.message ||
+          'Failed to update profile'
+      );
     } finally {
       setSaving(false);
     }
@@ -125,8 +124,8 @@ const Profile = () => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        'Failed to update password'
+          err.response?.data?.message ||
+          'Failed to update password'
       );
     } finally {
       setSaving(false);
@@ -158,8 +157,8 @@ const Profile = () => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        'Avatar upload failed'
+          err.response?.data?.message ||
+          'Avatar upload failed'
       );
     } finally {
       setAvatarUploading(false);
@@ -171,6 +170,41 @@ const Profile = () => {
     logout();
     toast.info('Logged out');
     navigate('/login');
+  };
+
+  //  Delete account
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      return toast.error('Please type DELETE to confirm');
+    }
+
+    setDeleting(true);
+    try {
+      await authService.deleteAccount();
+      toast.success('Your account has been deleted');
+
+      // Clear local auth state
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setAuthState({
+        token: null,
+        user: null,
+        error: null,
+        loading: false,
+        initialized: true,
+      });
+
+      setDeleteDialogOpen(false);
+      navigate('/');
+    } catch (err) {
+      toast.error(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Failed to delete account'
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (!user) {
@@ -231,7 +265,6 @@ const Profile = () => {
             flexWrap: 'wrap',
           }}
         >
-          {/* Avatar with upload overlay */}
           <Box sx={{ position: 'relative' }}>
             <Avatar
               src={user.avatar || undefined}
@@ -275,7 +308,6 @@ const Profile = () => {
             />
           </Box>
 
-          {/* Basic info */}
           <Box sx={{ flex: 1, minWidth: 200 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography variant="h5" fontWeight={600}>
@@ -382,7 +414,7 @@ const Profile = () => {
               onChange={handleChange}
               fullWidth
               margin="normal"
-              placeholder="https://your-site.com"
+              placeholder="https://blog-system-ochre.vercel.app/"
             />
 
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
@@ -422,6 +454,45 @@ const Profile = () => {
           </Button>
         </Box>
       )}
+
+      {/*  Danger zone */}
+      <Paper
+        elevation={0}
+        sx={{
+          mt: 4,
+          p: 3,
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'error.main',
+          bgcolor: 'error.main',
+          color: 'error.contrastText',
+          opacity: 0.95,
+        }}
+      >
+        <Typography variant="h6" fontWeight={600} gutterBottom>
+          Danger Zone
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
+          Once you delete your account, there is no going back. All your posts,
+          comments, and data will be permanently removed.
+        </Typography>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<DeleteForeverIcon />}
+          onClick={() => {
+            setDeleteConfirmText('');
+            setDeleteDialogOpen(true);
+          }}
+          sx={{
+            bgcolor: 'background.paper',
+            color: 'error.main',
+            '&:hover': { bgcolor: 'grey.100' },
+          }}
+        >
+          Delete My Account
+        </Button>
+      </Paper>
 
       {/* Password change dialog */}
       <Dialog
@@ -478,6 +549,52 @@ const Profile = () => {
             disabled={saving}
           >
             {saving ? 'Updating...' : 'Update Password'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/*  Delete Account Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: 'error.main', fontWeight: 600 }}>
+          Delete Account
+        </DialogTitle>
+        <DialogContent dividers>
+          <DialogContentText sx={{ mb: 2 }}>
+            This action is <strong>permanent</strong> and cannot be undone. All
+            your posts, comments, and account data will be deleted.
+          </DialogContentText>
+          <DialogContentText sx={{ mb: 3 }}>
+            To confirm, type <strong>DELETE</strong> in the box below:
+          </DialogContentText>
+          <TextField
+            fullWidth
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="DELETE"
+            autoFocus
+            disabled={deleting}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={deleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAccount}
+            variant="contained"
+            color="error"
+            disabled={deleteConfirmText !== 'DELETE' || deleting}
+            startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+          >
+            {deleting ? 'Deleting...' : 'Delete My Account'}
           </Button>
         </DialogActions>
       </Dialog>
