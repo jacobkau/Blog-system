@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../context'; 
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Typography, 
-  Box, 
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Box,
   Alert,
   CircularProgress,
   Paper,
   InputAdornment,
-  IconButton
+  IconButton,
+  Link,
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock, Email } from '@mui/icons-material';
 
@@ -23,7 +24,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { login, error: authError } = useAuthContext();
   const navigate = useNavigate();
 
@@ -31,7 +32,6 @@ const Login = () => {
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear local errors when user starts typing
     if (localError) setLocalError('');
   };
 
@@ -40,43 +40,34 @@ const Login = () => {
       setLocalError('Email is required');
       return false;
     }
-    
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setLocalError('Please enter a valid email address');
       return false;
     }
-    
     if (!password) {
       setLocalError('Password is required');
       return false;
     }
-    
     if (password.length < 6) {
       setLocalError('Password must be at least 6 characters');
       return false;
     }
-    
     return true;
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    
-    // Prevent duplicate submission
     if (isSubmitting) return;
-    
-    // Validate form
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     setLocalError('');
-    
+
     try {
       await login({ email, password });
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
-      // Error is already set in auth context, but we can show a local one too
       if (err.message.includes('Network')) {
         setLocalError('Network error. Please check your connection.');
       }
@@ -95,31 +86,25 @@ const Login = () => {
 
   return (
     <Container maxWidth="sm">
-      <Box 
-        sx={{ 
-          mt: { xs: 4, md: 8 }, 
+      <Box
+        sx={{
+          mt: { xs: 4, md: 8 },
           mb: 4,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
         }}
       >
-        <Paper 
+        <Paper
           elevation={3}
-          sx={{ 
-            p: { xs: 3, md: 4 }, 
+          sx={{
+            p: { xs: 3, md: 4 },
             width: '100%',
-            borderRadius: 2
+            borderRadius: 2,
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Lock 
-              sx={{ 
-                fontSize: 48, 
-                color: 'primary.main',
-                mb: 2
-              }} 
-            />
+            <Lock sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h4" component="h1" gutterBottom>
               Welcome Back
             </Typography>
@@ -127,21 +112,17 @@ const Login = () => {
               Sign in to access your account
             </Typography>
           </Box>
-          
-          {/* Error Messages */}
+
           {(authError || localError) && (
-            <Alert 
-              severity="error" 
+            <Alert
+              severity="error"
               sx={{ mb: 3 }}
-              onClose={() => {
-                setLocalError('');
-                // You might need a way to clear auth context error too
-              }}
+              onClose={() => setLocalError('')}
             >
               {localError || authError}
             </Alert>
           )}
-          
+
           <Box component="form" onSubmit={onSubmit} noValidate>
             <TextField
               label="Email Address"
@@ -161,11 +142,13 @@ const Login = () => {
                 ),
               }}
               error={!!localError && localError.toLowerCase().includes('email')}
-              helperText={localError.toLowerCase().includes('email') ? localError : ''}
+              helperText={
+                localError.toLowerCase().includes('email') ? localError : ''
+              }
               autoComplete="email"
               autoFocus
             />
-            
+
             <TextField
               label="Password"
               name="password"
@@ -197,50 +180,56 @@ const Login = () => {
                 ),
               }}
               error={!!localError && localError.toLowerCase().includes('password')}
-              helperText={localError.toLowerCase().includes('password') ? localError : ''}
+              helperText={
+                localError.toLowerCase().includes('password') ? localError : ''
+              }
               autoComplete="current-password"
             />
-            
+
             <Button
               type="submit"
               variant="contained"
               fullWidth
               disabled={isSubmitting || !email || !password}
-              sx={{ 
-                mt: 3, 
+              sx={{
+                mt: 3,
                 mb: 2,
                 py: 1.5,
-                fontSize: '1rem'
+                fontSize: '1rem',
               }}
             >
               {isSubmitting ? (
                 <>
-                  <CircularProgress 
-                    size={24} 
-                    sx={{ 
-                      color: 'white',
-                      mr: 1 
-                    }} 
-                  />
+                  <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
                   Signing In...
                 </>
-              ) : 'Sign In'}
+              ) : (
+                'Sign In'
+              )}
             </Button>
-            
+
+            {/*  Forgot password link — Link from MUI, RouterLink from React Router */}
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Link component={RouterLink} to="/forgot-password" variant="body2">
-              Forgot Password?
+                Forgot Password?
               </Link>
             </Box>
-            
-            {/* Sign Up Link */}
-            <Box sx={{ textAlign: 'center', mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+
+            <Box
+              sx={{
+                textAlign: 'center',
+                mt: 3,
+                pt: 3,
+                borderTop: 1,
+                borderColor: 'divider',
+              }}
+            >
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 Don't have an account?
               </Typography>
               <Button
-                component="a"
-                href="/register"
+                component={RouterLink}
+                to="/register"
                 variant="outlined"
                 size="small"
                 disabled={isSubmitting}
