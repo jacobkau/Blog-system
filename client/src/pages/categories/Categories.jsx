@@ -172,7 +172,7 @@ const Categories = () => {
         <Grid container spacing={4}>
           {categories.map((category) => (
             <Grid
-              size={{ xs: 12, sm: 6, md: 4, lg: 3 }}   // ✅ MUI v7 Grid API
+              size={{ xs: 12, sm: 6, md: 4, lg: 3 }}   
               key={category._id}
             >
               <Card
@@ -188,7 +188,7 @@ const Categories = () => {
                 }}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Top row: name + owner badge */}
+                  {/* Top row */}
                   <Box
                     sx={{
                       display: 'flex',
@@ -268,7 +268,7 @@ const Categories = () => {
                         to={`/categories/edit/${category._id}`}
                         title="Edit category"
                       >
-                        <EditIcon fontSize="small" />
+                        <EditIcon fontSize="small" /> Edit
                       </IconButton>
 
                       <IconButton
@@ -282,7 +282,7 @@ const Categories = () => {
                             : 'Delete category'
                         }
                       >
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon fontSize="small" /> Delete
                       </IconButton>
                     </Box>
                   )}
