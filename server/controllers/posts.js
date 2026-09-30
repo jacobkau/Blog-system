@@ -1,8 +1,20 @@
-import mongoose from 'mongoose';                         // ✅ added
+import mongoose from 'mongoose';
 import Post from '../models/Post.js';
-import Category from '../models/Category.js';            // ✅ added
+import Category from '../models/Category.js';
 import ErrorResponse from '../utils/errorResponse.js';
 import asyncHandler from '../middleware/async.js';
+
+const stripHtml = (html = '') =>
+  html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
 
 // @desc    Get all posts
 // @route   GET /api/posts
@@ -39,12 +51,10 @@ export const getPosts = asyncHandler(async (req, res) => {
 export const getPostsByCategory = asyncHandler(async (req, res, next) => {
   const categoryId = req.params.categoryId;
 
-  // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(categoryId)) {
     return next(new ErrorResponse('Invalid category ID', 400));
   }
 
-  // Verify the category exists
   const category = await Category.findById(categoryId);
   if (!category) {
     return next(
@@ -52,7 +62,6 @@ export const getPostsByCategory = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Find all posts that include this category
   const posts = await Post.find({ categories: categoryId })
     .populate('categories', 'name')
     .populate('author', 'name email')
@@ -90,7 +99,7 @@ export const getPost = asyncHandler(async (req, res, next) => {
 // @route   POST /api/posts
 // @access  Private
 export const createPost = asyncHandler(async (req, res, next) => {
-  const { title, content } = req.body;
+  const { title, content, excerpt } = req.body;
 
   if (!title || !content) {
     return next(new ErrorResponse('Title and content are required', 400));
@@ -100,10 +109,17 @@ export const createPost = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('User authentication failed', 401));
   }
 
+  const plainText = stripHtml(content);
+  const finalExcerpt =
+    (excerpt && stripHtml(excerpt).substring(0, 200)) ||
+    (plainText.length > 160
+      ? plainText.substring(0, 160) + '...'
+      : plainText);
+
   const post = await Post.create({
     title,
     content,
-    excerpt: content.substring(0, 100) + '...',
+    excerpt: finalExcerpt,
     author: req.user._id,
     categories: req.body.categories || [],
     featuredImage: req.body.featuredImage || 'no-photo.jpg',
@@ -140,7 +156,27 @@ export const updatePost = asyncHandler(async (req, res, next) => {
     );
   }
 
-  Object.assign(post, req.body);
+  // ✅ Whitelist fields + regenerate excerpt if content changed
+  const { title, content, excerpt, categories, featuredImage } = req.body;
+
+  if (title !== undefined) post.title = title;
+  if (categories !== undefined) post.categories = categories;
+  if (featuredImage !== undefined) post.featuredImage = featuredImage;
+
+  if (content !== undefined) {
+    post.content = content;
+
+    // Regenerate excerpt if user didn't send one, or if they changed content
+    const plainText = stripHtml(content);
+    post.excerpt =
+      (excerpt && stripHtml(excerpt).substring(0, 200)) ||
+      (plainText.length > 160
+        ? plainText.substring(0, 160) + '...'
+        : plainText);
+  } else if (excerpt !== undefined) {
+    post.excerpt = stripHtml(excerpt).substring(0, 200);
+  }
+
   await post.save();
 
   res.status(200).json({ success: true, data: post });
