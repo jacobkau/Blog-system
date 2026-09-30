@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import asyncHandler from '../middleware/async.js';
 import ErrorResponse from '../utils/errorResponse.js';
 import crypto from 'crypto';
+import Post from '../models/Post.js'; 
 
 // @desc    Generate password reset token
 // @route   POST /api/auth/forgot-password
@@ -119,6 +120,7 @@ export const register = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 201, res);
 });
 
+
 // @desc    Delete current user's account
 // @route   DELETE /api/auth/account
 // @access  Private
@@ -129,26 +131,22 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('User not found', 404));
   }
 
-  // Optional: prevent the last admin from deleting themselves
+  // Prevent the last admin from deleting themselves
   if (user.role === 'admin') {
     const adminCount = await User.countDocuments({ role: 'admin' });
     if (adminCount <= 1) {
       return next(
-        new ErrorResponse(
-          'Cannot delete the last admin account',
-          400
-        )
+        new ErrorResponse('Cannot delete the last admin account', 400)
       );
     }
   }
 
-  // cascade delete the user's posts
-  // Uncomment if you want to remove their posts when they delete their account
-  // await Post.deleteMany({ author: user._id });
+  //  Cascade delete — remove all posts authored by this user first
+  await Post.deleteMany({ author: user._id });
 
+  // Then delete the user
   await user.deleteOne();
 
-  // Clear the auth cookie
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
@@ -159,6 +157,7 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
     message: 'Account deleted successfully',
   });
 });
+
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
