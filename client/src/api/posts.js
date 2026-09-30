@@ -65,7 +65,7 @@ const createPost = async (postData) => {
 
 // Update post
 const updatePost = async (postId, postData) => {
-  const response = await apiClient.put(postId, postData);
+  const response = await apiClient.post(postId, postData);
   return response.data;
 };
 
