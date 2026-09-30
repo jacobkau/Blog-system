@@ -30,6 +30,14 @@ import {
 import { useAuthContext } from '../../context';
 import authService from '../../api/auth';
 
+// ✅ Ensure URLs have a protocol; otherwise browsers treat them as relative paths
+const normalizeUrl = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+
 const Profile = () => {
   const { user, logout, setAuthState } = useAuthContext();
   const navigate = useNavigate();
@@ -75,6 +83,14 @@ const Profile = () => {
 
   const handlePwdChange = (e) => {
     setPwdData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // ✅ Auto-prepend https:// when user leaves the website field
+  const handleWebsiteBlur = (e) => {
+    const val = e.target.value.trim();
+    if (val && !/^https?:\/\//i.test(val)) {
+      setFormData((prev) => ({ ...prev, website: `https://${val}` }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -172,7 +188,6 @@ const Profile = () => {
     navigate('/login');
   };
 
-  //  Delete account
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') {
       return toast.error('Please type DELETE to confirm');
@@ -183,7 +198,6 @@ const Profile = () => {
       await authService.deleteAccount();
       toast.success('Your account has been deleted');
 
-      // Clear local auth state
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setAuthState({
@@ -318,20 +332,20 @@ const Profile = () => {
               )}
             </Box>
             <Typography variant="body1" color="text.secondary">
-              {user.email}
+              Email: {user.email}
             </Typography>
             {user.location && (
               <Typography variant="body2" color="text.secondary">
-                📍 {user.location}
+                Country: {user.location}
               </Typography>
             )}
             {user.website && (
               <Typography variant="body2" color="text.secondary">
-                🔗{' '}
+                Website: {' '}
                 <a
-                  href={user.website}
+                  href={normalizeUrl(user.website)}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noreferrer noopener"
                   style={{ color: 'inherit' }}
                 >
                   {user.website}
@@ -412,9 +426,11 @@ const Profile = () => {
               name="website"
               value={formData.website}
               onChange={handleChange}
+              onBlur={handleWebsiteBlur}
               fullWidth
               margin="normal"
-              placeholder="https://blog-system-ochre.vercel.app/"
+              placeholder="https://your-site.com"
+              helperText="Include https:// (we'll add it if you forget)"
             />
 
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
@@ -455,7 +471,7 @@ const Profile = () => {
         </Box>
       )}
 
-      {/*  Danger zone */}
+      {/* Danger zone */}
       <Paper
         elevation={0}
         sx={{
@@ -553,7 +569,7 @@ const Profile = () => {
         </DialogActions>
       </Dialog>
 
-      {/*  Delete Account Dialog */}
+      {/* Delete Account Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => !deleting && setDeleteDialogOpen(false)}
@@ -592,7 +608,13 @@ const Profile = () => {
             variant="contained"
             color="error"
             disabled={deleteConfirmText !== 'DELETE' || deleting}
-            startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+            startIcon={
+              deleting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <DeleteForeverIcon />
+              )
+            }
           >
             {deleting ? 'Deleting...' : 'Delete My Account'}
           </Button>
