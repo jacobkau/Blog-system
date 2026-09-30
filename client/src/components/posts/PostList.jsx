@@ -14,6 +14,11 @@ const stripHtml = (html = '') =>
   html
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -25,16 +30,19 @@ const PostList = ({ posts }) => {
   return (
     <>
       {posts.map((post) => {
-        const preview =
-          post.excerpt?.trim() ||
-          stripHtml(post.content).substring(0, 160) ||
-          'No content available';
+
+        const rawPreview =
+          post.excerpt?.trim() || stripHtml(post.content) || 'No content available';
+        const preview = stripHtml(rawPreview).substring(0, 160);
 
         const hasImage =
           post.featuredImage && post.featuredImage !== 'no-photo.jpg';
 
         return (
-          <Grid item xs={12} md={6} lg={4} key={post._id}>
+          <Grid
+            size={{ xs: 12, sm: 6, md: 4 }}  
+            key={post._id}
+          >
             <Card
               sx={{
                 height: '100%',
@@ -63,10 +71,9 @@ const PostList = ({ posts }) => {
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {preview.length > 160 ? `${preview.substring(0, 160)}...` : preview}
+                  {preview.length >= 160 ? `${preview}...` : preview}
                 </Typography>
 
-                {/* Optional: category chips */}
                 {Array.isArray(post.categories) && post.categories.length > 0 && (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
                     {post.categories.slice(0, 3).map((cat) => (
