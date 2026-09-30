@@ -52,29 +52,9 @@ export const authorize = (...roles) => {
   };
 };
 
-//  CORS headers on every error response
+//  Simplified error handler
 export const errorHandler = (err, req, res, next) => {
   console.error('🚨 Error:', err.message);
-
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://blog-system-ochre.vercel.app',
-  ];
-
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader(
-      'Access-Control-Allow-Methods',
-      'GET,POST,PUT,DELETE,PATCH,OPTIONS'
-    );
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Content-Type, Authorization'
-    );
-  }
 
   const statusCode = err.statusCode || 500;
 
