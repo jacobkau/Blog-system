@@ -65,7 +65,7 @@ const Register = () => {
         console.error('Welcome email failed:', emailErr?.text || emailErr?.message);
       }
 
-      toast.success('Registration successful! Welcome aboard 🎉');
+      toast.success('Registration successful!');
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {
       const errorMsg =
