@@ -227,17 +227,10 @@ const Login = () => {
               ) : 'Sign In'}
             </Button>
             
-            {/* Forgot Password Link */}
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                component="a"
-                href="/forgot-password"
-                color="primary"
-                size="small"
-                disabled={isSubmitting}
-              >
-                Forgot Password?
-              </Button>
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Link component={RouterLink} to="/forgot-password" variant="body2">
+              Forgot Password?
+              </Link>
             </Box>
             
             {/* Sign Up Link */}
