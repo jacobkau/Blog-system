@@ -46,6 +46,18 @@ const Register = () => {
       // Register the user 
       await register({ name, email, password });
 
+
+
+      
+      // ✅ Temporary debug — remove after fixing
+console.log('EmailJS env check:', {
+  service: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+  welcomeTemplate: import.meta.env.VITE_EMAILJS_WELCOME_TEMPLATE_ID,
+  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY ? 'present' : 'missing',
+});
+
+      
+
       //  Send welcome email — don't fail registration if the email fails
       try {
         await emailjs.send(
