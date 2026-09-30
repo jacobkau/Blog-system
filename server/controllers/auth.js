@@ -119,6 +119,46 @@ export const register = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 201, res);
 });
 
+// @desc    Delete current user's account
+// @route   DELETE /api/auth/account
+// @access  Private
+export const deleteAccount = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  // Optional: prevent the last admin from deleting themselves
+  if (user.role === 'admin') {
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (adminCount <= 1) {
+      return next(
+        new ErrorResponse(
+          'Cannot delete the last admin account',
+          400
+        )
+      );
+    }
+  }
+
+  // cascade delete the user's posts
+  // Uncomment if you want to remove their posts when they delete their account
+  // await Post.deleteMany({ author: user._id });
+
+  await user.deleteOne();
+
+  // Clear the auth cookie
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Account deleted successfully',
+  });
+});
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
