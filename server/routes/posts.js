@@ -15,6 +15,8 @@ router
   .route('/:id')
   .get(getPost)
   .put(protect, updatePost)
+  .post(protect, updatePost)
   .delete(protect, deletePost);
 router.get('/category/:categoryId', getPostsByCategory);
+
 export default router;
