@@ -121,6 +121,20 @@ const onSubmit = async (e) => {
           {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
         </Button>
         
+        {/* Forgot Password Link */}
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Button
+                component="a"
+                href="/forgot-password"
+                color="primary"
+                size="small"
+                disabled={isSubmitting}
+              >
+                Forgot Password?
+              </Button>
+            </Box>
+
+          {/* Login Link */}
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="body2">
             Already have an account? <Link href="/login">Sign in</Link>
