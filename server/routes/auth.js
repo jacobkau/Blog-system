@@ -8,6 +8,7 @@ import {
   forgotPassword,   
   resetPassword,    
   updatePassword,
+  deleteAccount,  
 } from '../controllers/auth.js';
 import { protect } from '../middleware/Auth.js';
 import multer from 'multer';
@@ -25,5 +26,6 @@ router.post('/updatedetails', protect, updateDetails);
 router.post('/updatepassword', protect, updatePassword);
 router.post('/forgot-password', forgotPassword);
 router.put('/reset-password/:token', resetPassword);
+router.delete('/account', protect, deleteAccount);
 
 export default router;
