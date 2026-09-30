@@ -10,13 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-      "@tiptap/extension-image": "^2.x.x",
+  "@tiptap/extension-image": "^2.x.x",
   "@tiptap/extension-link": "^2.x.x",
   "@tiptap/extension-placeholder": "^2.x.x",
   "@tiptap/extension-underline": "^2.x.x",
   "@tiptap/react": "^2.x.x",
   "@tiptap/starter-kit": "^2.x.x",
   "dompurify": "^3.x.x",
+    "@emailjs/browser": "^4.x.x",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.1.1",
