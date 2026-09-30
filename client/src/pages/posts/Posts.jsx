@@ -16,7 +16,7 @@ const Posts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');   // ✅ NEW
+  const [searchQuery, setSearchQuery] = useState('');  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const postsPerPage = 10;
@@ -31,6 +31,7 @@ const Posts = () => {
           page: currentPage,
           limit: postsPerPage,
           sort: '-createdAt',
+          search: searchQuery, 
         });
 
         const postsData = response?.data || response?.posts || response;
