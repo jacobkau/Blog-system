@@ -51,6 +51,11 @@ const forgotPassword = async (email) => {
   return response.data;
 };
 
+const deleteAccount = async () => {
+  const response = await apiClient.delete('account');
+  return response.data;
+};
+
 const resetPassword = async (token, password) => {
   const response = await apiClient.put(`reset-password/${token}`, { password });
   return response.data;
@@ -72,5 +77,6 @@ export default {
   updatePassword,
   forgotPassword,
   resetPassword,
+  deleteAccount,
   uploadAvatar,
 };
