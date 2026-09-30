@@ -19,6 +19,7 @@ router
   .route('/:id')
   .get(getCategory)
   .put(protect, updateCategory)
+  .post(protect, updateCategory)
   .delete(protect, deleteCategory);
 
 export default router;
