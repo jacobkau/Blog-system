@@ -52,10 +52,6 @@ passwordResetExpires: {
   type: Date,
   select: false,
 },
-passwordChangedAt: {
-  type: Date,
-  select: false,
-},
   role: {
     type: String,
     enum: ['user', 'admin'],
