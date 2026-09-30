@@ -19,7 +19,7 @@ router.post('/login', login);
 router.put('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.get('/logout', logout);
 router.get('/me', protect, getMe);
-router.put('/updatedetails', protect, updateDetails);
-router.put('/updatepassword', protect, updatePassword);
+router.post('/updatedetails', protect, updateDetails);
+router.post('/updatepassword', protect, updatePassword);
 
 export default router;
