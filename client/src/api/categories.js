@@ -56,7 +56,7 @@ const createCategory = async (categoryData) => {
 
 // Update category
 const updateCategory = async (id, categoryData) => {
-  const response = await apiClient.put(id, categoryData);
+  const response = await apiClient.post(id, categoryData);
   return response.data; 
 };
 
