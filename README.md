@@ -1,9 +1,3 @@
-Here's a complete, professional README for your project. It covers everything we've built together — the MERN architecture, all the pages, the tech stack, the setup steps, and the environment variables.
-
----
-
-## `README.md`
-
 ```markdown
 # Witty Blog — Blog Management System
 
