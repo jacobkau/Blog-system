@@ -500,6 +500,4 @@ This project is licensed under the MIT License.
 
 **Built  by Witty Highbrow Technologies**
 ```
-- **Enable GitHub Pages** — turn the README into a landing page if you want.
 
-Everything in that README reflects the actual state of your project — nothing is aspirational. Anyone who clones it, follows the setup steps, and configures the env vars will get the same working app you have deployed.
