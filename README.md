@@ -77,6 +77,48 @@ The project is split into two independently deployable applications:
 
 ---
 
+## Screenshots
+
+### Authentication
+
+| Login | Register | Forgot Password |
+|-------|----------|-----------------|
+| ![Login](docs/screenshots/login.png) | ![Register](docs/screenshots/register.png) | ![Forgot Password](docs/screenshots/forgot-password.png) |
+
+### Home
+
+| Homepage | Homepage (scrolled) |
+|----------|---------------------|
+| ![Homepage](docs/screenshots/homepage.png) | ![Homepage 2](docs/screenshots/homepage-2.png) |
+
+###  Posts
+
+| All Posts | Single Post | Single Post (content) |
+|-----------|-------------|-----------------------|
+| ![Posts](docs/screenshots/posts.png) | ![Single Post](docs/screenshots/single-post.png) | ![Single Post 2](docs/screenshots/single-post-2.png) |
+
+| Create Post | Categorized Posts |
+|-------------|-------------------|
+| ![Create Post](docs/screenshots/create-post.png) | ![Categorized Posts](docs/screenshots/categorized-posts.png) |
+
+###  Categories
+
+| Categories | Create Category |
+|------------|-----------------|
+| ![Categories](docs/screenshots/categories.png) | ![Create Category](docs/screenshots/create-category.png) |
+
+###  Profile
+
+| Profile | Edit Profile | Danger Zone |
+|---------|--------------|-------------|
+| ![Profile](docs/screenshots/profile.png) | ![Edit Profile](docs/screenshots/edit-profile.png) | ![Danger Zone](docs/screenshots/danger-zone.png) |
+
+###  Error Pages
+
+| 404 Not Found |
+|---------------|
+| ![404](docs/screenshots/404.png) |
+
 ## Tech Stack
 
 ### Frontend
