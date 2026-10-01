@@ -30,7 +30,7 @@ import {
 import { useAuthContext } from '../../context';
 import authService from '../../api/auth';
 
-// ✅ Ensure URLs have a protocol; otherwise browsers treat them as relative paths
+//  Ensure URLs have a protocol; otherwise browsers treat them as relative paths
 const normalizeUrl = (url) => {
   if (!url) return '';
   const trimmed = url.trim();
