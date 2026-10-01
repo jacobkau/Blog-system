@@ -332,18 +332,18 @@ const Profile = () => {
               )}
             </Box>
             <Typography variant="body1" color="text.secondary">
-              Email: {user.email}
+              {user.email}
             </Typography>
             {user.location && (
               <Typography variant="body2" color="text.secondary">
-                Country: {user.location}
+                📍 {user.location}
               </Typography>
             )}
             {user.website && (
               <Typography variant="body2" color="text.secondary">
-                Website: {' '}
+                🔗{' '}
                 <a
-                  href={(user.website)}
+                  href={normalizeUrl(user.website)}
                   target="_blank"
                   rel="noreferrer noopener"
                   style={{ color: 'inherit' }}
