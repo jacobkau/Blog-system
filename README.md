@@ -111,13 +111,13 @@ The project is split into two independently deployable applications:
 
 | Profile | Edit Profile | Danger Zone |
 |---------|--------------|-------------|
-| ![Profile](docs/screenshots/profile.png) | ![Edit Profile](docs/screenshots/edit-profile.png) | ![Danger Zone](docs/screenshots/danger-zone.png) |
+| ![Profile](docs/screenshots/profile.png) | ![Edit Profile](docs/screenshots/edit-profile.png) | ![Danger Zone](docs/screenshots/danger.png) |
 
 ###  Error Pages
 
 | 404 Not Found |
 |---------------|
-| ![404](docs/screenshots/404.png) |
+| ![404](docs/screenshots/404-page.png) |
 
 ## Tech Stack
 
