@@ -343,7 +343,7 @@ const Profile = () => {
               <Typography variant="body2" color="text.secondary">
                 Website: {' '}
                 <a
-                  href={normalizeUrl(user.website)}
+                  href={(user.website)}
                   target="_blank"
                   rel="noreferrer noopener"
                   style={{ color: 'inherit' }}
