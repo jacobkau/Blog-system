@@ -30,7 +30,6 @@ import {
 import { useAuthContext } from '../../context';
 import authService from '../../api/auth';
 
-//  Ensure URLs have a protocol; otherwise browsers treat them as relative paths
 const normalizeUrl = (url) => {
   if (!url) return '';
   const trimmed = url.trim();
@@ -85,7 +84,7 @@ const Profile = () => {
     setPwdData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ✅ Auto-prepend https:// when user leaves the website field
+  
   const handleWebsiteBlur = (e) => {
     const val = e.target.value.trim();
     if (val && !/^https?:\/\//i.test(val)) {
@@ -322,40 +321,47 @@ const Profile = () => {
             />
           </Box>
 
-          <Box sx={{ flex: 1, minWidth: 200 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography variant="h5" fontWeight={600}>
-                {user.name}
-              </Typography>
-              {user.role === 'admin' && (
-                <Chip label="Admin" color="primary" size="small" />
-              )}
-            </Box>
-            <Typography variant="body1" color="text.secondary">
-              {user.email}
-            </Typography>
-            {user.location && (
-              <Typography variant="body2" color="text.secondary">
-                📍 {user.location}
-              </Typography>
-            )}
-            {user.website && (
-              <Typography variant="body2" color="text.secondary">
-                🔗{' '}
-                <a
-                  href={normalizeUrl(user.website)}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  style={{ color: 'inherit' }}
-                >
-                  {user.website}
-                </a>
-              </Typography>
-            )}
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Member since {new Date(user.createdAt).toLocaleDateString()}
-            </Typography>
-          </Box>
+          <Box
+  sx={{
+    flex: 1,
+    minWidth: 200,
+    display: 'grid',
+    gridTemplateColumns: 'auto 1fr',
+    columnGap: 1.5,
+    rowGap: 0.5,
+  }}
+>
+  <Typography variant="body2" fontWeight={600}>Email:</Typography>
+  <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+
+  {user.location && (
+    <>
+      <Typography variant="body2" fontWeight={600}>Location:</Typography>
+      <Typography variant="body2" color="text.secondary">{user.location}</Typography>
+    </>
+  )}
+
+  {user.website && (
+    <>
+      <Typography variant="body2" fontWeight={600}>Website:</Typography>
+      <Typography variant="body2" color="text.secondary">
+        <a
+          href={normalizeUrl(user.website)}
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{ color: 'inherit' }}
+        >
+          {user.website}
+        </a>
+      </Typography>
+    </>
+  )}
+
+  <Typography variant="body2" fontWeight={600}>Member since:</Typography>
+  <Typography variant="body2" color="text.secondary">
+    {new Date(user.createdAt).toLocaleDateString()}
+  </Typography>
+</Box>
         </Box>
 
         {user.bio && !isEditing && (
