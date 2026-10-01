@@ -1,4 +1,3 @@
-```markdown
 # Witty Blog — Blog Management System
 
 A full-stack MERN blog platform with rich-text editing, image uploads, JWT authentication, and transactional emails. Built for writers and readers, deployed on Vercel (frontend) and Render (backend).
@@ -178,7 +177,6 @@ Blog-system/
 └── README.md
 ```
 
----
 
 ##  Getting Started
 
