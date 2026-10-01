@@ -498,6 +498,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Built  by Witty Highbrow Technologies**
-```
-
+**Built by Witty Highbrow Technologies**
