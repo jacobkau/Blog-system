@@ -88,12 +88,24 @@ const getFeaturedPosts = async (limit = 3) => {
   });
   return response.data;
 };
+//like posts
+const likePost = async (postId) => {
+  const response = await apiClient.put(`${postId}/like`);
+  return response.data;
+};
+//share posts
+const sharePost = async (postId) => {
+  const response = await apiClient.post(`${postId}/share`);
+  return response.data;
+};
 
 export default {
   getPosts,
   getPost,
   createPost,
   updatePost,
+  likePost,
+  sharePost,
   deletePost,
   getPostsByCategory,
   getFeaturedPosts
