@@ -1,8 +1,12 @@
 import express from 'express';
-import { getPosts, getPostsByCategory, createPost, getPost, updatePost, deletePost } from '../controllers/posts.js';
+import {
+  getPosts, getPostsByCategory, createPost,
+  getPost, updatePost, deletePost
+} from '../controllers/posts.js';
 import { protect } from '../middleware/Auth.js';
 import advancedResults from '../middleware/advancedResults.js';
 import Post from '../models/Post.js';
+import commentRoutes from './comments.js';   
 
 const router = express.Router();
 
@@ -11,12 +15,15 @@ router
   .get(advancedResults(Post, ['categories', 'author']), getPosts)
   .post(protect, createPost);
 
+router.use('/:postId/comments', commentRoutes);   
+
 router
   .route('/:id')
   .get(getPost)
   .put(protect, updatePost)
   .post(protect, updatePost)
   .delete(protect, deletePost);
+
 router.get('/category/:categoryId', getPostsByCategory);
 
 export default router;
