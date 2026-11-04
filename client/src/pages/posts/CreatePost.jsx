@@ -169,9 +169,9 @@ const CreatePost = () => {
               multiple
               value={selectedCategories}
               onChange={handleCategoryChange}
-              open={selectOpen}                  // ⬇ Control state
-              onOpen={() => setSelectOpen(true)} // ⬇ Control state
-              onClose={() => setSelectOpen(false)} // ⬇ Control state
+              open={selectOpen}                  
+              onOpen={() => setSelectOpen(true)} 
+              onClose={() => setSelectOpen(false)} 
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(Array.isArray(selected) ? selected : []).map((value) => (
