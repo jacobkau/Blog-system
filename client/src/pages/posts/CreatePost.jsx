@@ -27,7 +27,7 @@ const schema = yup.object().shape({
     .string()
     .required('Excerpt is required')
     .max(200, 'Excerpt must be less than 200 characters'),
-  category: yup.string().required('Please select exactly one category'), // ⬅ Single string validation
+  category: yup.string().required('Please select exactly one category'), 
 });
 
 const getTextLength = (html = '') =>
@@ -45,7 +45,6 @@ const CreatePost = () => {
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
   
-  // State to force the dropdown closed
   const [selectOpen, setSelectOpen] = useState(false);
 
   const {
@@ -85,7 +84,6 @@ const CreatePost = () => {
     }
   }, [preSelectedCategory, setValue]);
 
-  // ⬇ Enforce single selection by closing immediately
   const handleCategoryChange = (event) => {
     setValue('category', event.target.value, { shouldValidate: true });
     setSelectOpen(false); 
@@ -110,7 +108,7 @@ const CreatePost = () => {
         title: data.title,
         content: contentHTML,
         excerpt: data.excerpt,
-        categories: [data.category], // Wrap the single ID in an array for backend compatibility
+        categories: [data.category], 
         featuredImage,
       });
       navigate('/posts');
@@ -169,10 +167,9 @@ const CreatePost = () => {
               label="Category"
               value={selectedCategory}
               onChange={handleCategoryChange}
-              open={selectOpen}                  // ⬇ Force open state
-              onOpen={() => setSelectOpen(true)} // ⬇ Force open state
-              onClose={() => setSelectOpen(false)} // ⬇ Force closed state
-              // Removed multiple prop
+              open={selectOpen}                  
+              onOpen={() => setSelectOpen(true)} 
+              onClose={() => setSelectOpen(false)}
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
