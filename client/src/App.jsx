@@ -1,5 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuthContext } from './context';  
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
 import { ToastContainer } from 'react-toastify';
@@ -23,36 +23,59 @@ import CategoryPosts from './pages/categories/CategoryPosts.jsx';
 import Profile from './pages/user/Profile';
 import NotFound from './pages/NotFound';
 
+//  protect admin-only routes
+const AdminRoute = ({ children }) => {
+  const { user } = useAuthContext();
+  
+  // If user is not an admin, redirect to home
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
     <>
-      <Layout>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <AuthProvider> 
+        <Layout>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/posts" element={<Posts />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path="/posts/:id" element={<SinglePost />} />
-            <Route path="/edit-post/:id" element={<EditPost />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/categories/edit/:id" element={<EditCategory />} />
-            <Route path="/category/:slugOrId" element={<CategoryPosts />} />
-            <Route path="/create-category" element={<CreateCategory />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/dashboard" element={user?.role === 'admin' ? (<Dashboard />) : (<Navigate to="/" replace />)}/>
-          </Route>
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/posts" element={<Posts />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/posts/:id" element={<SinglePost />} />
+              <Route path="/edit-post/:id" element={<EditPost />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/categories/edit/:id" element={<EditCategory />} />
+              <Route path="/category/:slugOrId" element={<CategoryPosts />} />
+              <Route path="/create-category" element={<CreateCategory />} />
+              <Route path="/profile" element={<Profile />} />
+              
+              {/* Admin Dashboard Route */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <AdminRoute>
+                    <Dashboard />
+                  </AdminRoute>
+                } 
+              />
+            </Route>
 
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
 
       <ToastContainer
         position="top-center"
