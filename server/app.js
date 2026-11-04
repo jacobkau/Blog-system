@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cors from 'cors';
+import http from 'http';
+import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import postsRouter from './routes/posts.js';
 import categoriesRouter from './routes/categories.js';
@@ -13,8 +15,33 @@ import { errorHandler } from './middleware/Auth.js';
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 
-// ✅ CORS config
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id);
+
+  socket.on('joinPost', (postId) => {
+    socket.join(`post:${postId}`);
+  });
+
+  socket.on('leavePost', (postId) => {
+    socket.leave(`post:${postId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected:', socket.id);
+  });
+});
+
+app.set('io', io);
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -23,7 +50,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // No origin (curl, Postman, mobile) → allow
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
 
@@ -38,10 +64,8 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// ✅ Apply CORS to every request (including GET, POST, PUT...)
 app.use(cors(corsOptions));
 
-// ✅ Handle preflight for ALL routes — works in Express 4 and 5
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return cors(corsOptions)(req, res, next);
@@ -60,9 +84,9 @@ if (process.env.NODE_ENV === 'development') {
 // MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
+  .then(() => console.log('MongoDB Connected'))
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
 
@@ -96,13 +120,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Routes
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/posts', postsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
 
-// ✅ Only ONE error handler — the imported one
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
