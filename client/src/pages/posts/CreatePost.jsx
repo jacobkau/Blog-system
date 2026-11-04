@@ -46,9 +46,6 @@ const CreatePost = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
-  
-  // ⬇ NEW: State to control the dropdown
-  const [selectOpen, setSelectOpen] = useState(false);
 
   const {
     register,
@@ -164,14 +161,23 @@ const CreatePost = () => {
           />
 
           <FormControl fullWidth margin="normal" error={!!errors.categories}>
-            <InputLabel>Categories</InputLabel>
+            <InputLabel id="category-select-label">Categories</InputLabel>
             <Select
+              labelId="category-select-label"
+              id="category-select"
               multiple
               value={selectedCategories}
               onChange={handleCategoryChange}
-              open={selectOpen}                  
-              onOpen={() => setSelectOpen(true)} 
-              onClose={() => setSelectOpen(false)} 
+              label="Categories"
+              MenuProps={{
+                disablePortal: false,
+                PaperProps: {
+                  style: {
+                    maxHeight: 250,
+                    width: 250,
+                  },
+                },
+              }}
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(Array.isArray(selected) ? selected : []).map((value) => (
@@ -196,13 +202,11 @@ const CreatePost = () => {
             )}
           </FormControl>
 
-          {/* Featured image (Cloudinary) */}
           <FeaturedImageUploader
             value={featuredImage}
             onChange={setFeaturedImage}
           />
 
-          {/* Content */}
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
               Content
