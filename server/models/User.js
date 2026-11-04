@@ -52,6 +52,10 @@ passwordResetExpires: {
   type: Date,
   select: false,
 },
+googleId: {
+  type: String,
+  default: null,
+},
   role: {
     type: String,
     enum: ['user', 'admin'],
