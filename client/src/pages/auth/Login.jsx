@@ -15,14 +15,18 @@ import {
   InputAdornment,
   IconButton,
   Link,
+  Divider,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Lock, Email } from '@mui/icons-material';
+import { 
+  Visibility, 
+  VisibilityOff, 
+  LockOutlined, 
+  EmailOutlined,
+  LoginOutlined
+} from '@mui/icons-material';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,17 +54,12 @@ const Login = () => {
       setLocalError('Password is required');
       return false;
     }
-    if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters');
-      return false;
-    }
     return true;
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    if (!validateForm()) return;
+    if (isSubmitting || !validateForm()) return;
 
     setIsSubmitting(true);
     setLocalError('');
@@ -70,7 +69,7 @@ const Login = () => {
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
-      if (err.message.includes('Network')) {
+      if (err.message?.includes('Network')) {
         setLocalError('Network error. Please check your connection.');
       }
     } finally {
@@ -78,197 +77,171 @@ const Login = () => {
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleMouseDownPassword = (e) => {
-    e.preventDefault();
-  };
-
   const handleGoogleSuccess = async (credentialResponse) => {
-  try {
-    const response = await fetch('https://blog-system-q65l.onrender.com/api/auth/google', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: credentialResponse.credential }),
-    });
+    try {
+      const response = await fetch(
+        'https://blog-system-q65l.onrender.com/api/auth/google',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: credentialResponse.credential }),
+        }
+      );
 
-    const data = await response.json();
-    
-    if (response.ok) {
-      localStorage.setItem('token', data.token);
-      toast.success('Logged in with Google!');
-      navigate('/');
-    } else {
-      toast.error(data.error || 'Google auth failed');
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        toast.success('Logged in with Google!');
+        navigate('/');
+      } else {
+        toast.error(data.error || 'Google auth failed');
+      }
+    } catch (err) {
+      toast.error('Network error during Google login');
     }
-  } catch (err) {
-    toast.error('Network error during Google login');
-  }
-};
+  };
 
   return (
-    <Container maxWidth="sm">
-      <Box
+    <Container maxWidth="xs" sx={{ py: { xs: 4, md: 8 } }}>
+      <Paper
+        elevation={0}
         sx={{
-          mt: { xs: 4, md: 8 },
-          mb: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          p: { xs: 3, sm: 4 },
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            p: { xs: 3, md: 4 },
-            width: '100%',
-            borderRadius: 2,
-          }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Lock sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h4" component="h1" gutterBottom>
-              Welcome Back
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sign in to access your account
-            </Typography>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              bgcolor: 'primary.main',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <LoginOutlined fontSize="large" />
+          </Box>
+          <Typography variant="h5" fontWeight={700} gutterBottom>
+            Welcome Back
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Sign in to continue to your account
+          </Typography>
+        </Box>
+
+        {(authError || localError) && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setLocalError('')}>
+            {localError || authError}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={onSubmit} noValidate>
+          <TextField
+            label="Email Address"
+            name="email"
+            type="email"
+            value={email}
+            onChange={onChange}
+            fullWidth
+            margin="normal"
+            required
+            disabled={isSubmitting}
+            autoComplete="email"
+            autoFocus
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlined color="action" />
+                </InputAdornment>
+              ),
+            }}
+            error={!!localError && localError.toLowerCase().includes('email')}
+            helperText={localError.toLowerCase().includes('email') ? localError : ''}
+          />
+
+          <TextField
+            label="Password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={onChange}
+            fullWidth
+            margin="normal"
+            required
+            disabled={isSubmitting}
+            autoComplete="current-password"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlined color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    disabled={isSubmitting}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            error={!!localError && localError.toLowerCase().includes('password')}
+            helperText={localError.toLowerCase().includes('password') ? localError : ''}
+          />
+
+          <Box sx={{ textAlign: 'right', mt: 1 }}>
+            <Link component={RouterLink} to="/forgot-password" variant="body2" underline="hover">
+              Forgot password?
+            </Link>
           </Box>
 
-          {(authError || localError) && (
-            <Alert
-              severity="error"
-              sx={{ mb: 3 }}
-              onClose={() => setLocalError('')}
-            >
-              {localError || authError}
-            </Alert>
-          )}
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            disabled={isSubmitting || !email || !password}
+            sx={{ mt: 3, py: 1.5, borderRadius: 2, textTransform: 'none', fontSize: '1rem', fontWeight: 600 }}
+          >
+            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+          </Button>
+        </Box>
 
-          <Box component="form" onSubmit={onSubmit} noValidate>
-            <TextField
-              label="Email Address"
-              name="email"
-              type="email"
-              value={email}
-              onChange={onChange}
-              fullWidth
-              margin="normal"
-              required
-              disabled={isSubmitting}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email color="action" />
-                  </InputAdornment>
-                ),
-              }}
-              error={!!localError && localError.toLowerCase().includes('email')}
-              helperText={
-                localError.toLowerCase().includes('email') ? localError : ''
-              }
-              autoComplete="email"
-              autoFocus
-            />
+        <Divider sx={{ my: 3 }}>OR</Divider>
 
-            <TextField
-              label="Password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={onChange}
-              fullWidth
-              margin="normal"
-              required
-              disabled={isSubmitting}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                      disabled={isSubmitting}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              error={!!localError && localError.toLowerCase().includes('password')}
-              helperText={
-                localError.toLowerCase().includes('password') ? localError : ''
-              }
-              autoComplete="current-password"
-            />
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => toast.error('Google Login Failed')}
+            useOneTap
+            shape="pill"
+            width="100%"
+            text="continue_with"
+          />
+        </Box>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              disabled={isSubmitting || !email || !password}
-              sx={{
-                mt: 3,
-                mb: 2,
-                py: 1.5,
-                fontSize: '1rem',
-              }}
-            >
-              {isSubmitting ? (
-                <>
-                  <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-
-            {/*  Forgot password link — Link from MUI, RouterLink from React Router */}
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Link component={RouterLink} to="/forgot-password" variant="body2">
-                Forgot Password?
-              </Link>
-            </Box>
-
-            <Box
-              sx={{
-                textAlign: 'center',
-                mt: 3,
-                pt: 3,
-                borderTop: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Don't have an account?
-              </Typography>
-              <Button
-                component={RouterLink}
-                to="/register"
-                variant="outlined"
-                size="small"
-                disabled={isSubmitting}
-              >
-                Create Account
-              </Button>
-              <GoogleLogin
-  onSuccess={handleGoogleSuccess}
-  onError={() => toast.error('Google Login Failed')}
-  useOneTap 
-/>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Don't have an account?{' '}
+            <Link component={RouterLink} to="/register" fontWeight={600} underline="hover">
+              Sign up
+            </Link>
+          </Typography>
+        </Box>
+      </Paper>
     </Container>
   );
 };
