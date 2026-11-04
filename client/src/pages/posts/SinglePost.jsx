@@ -4,7 +4,7 @@ import { Container, Typography, Button, Box, Chip, Divider } from '@mui/material
 import DOMPurify from 'dompurify';
 import postService from '../../api/posts';
 import Spinner from '../../components/ui/Spinner';
-import Comments from '../../components/posts/Comments'; 
+import Comments from '../../components/Comments';
 import { useAuthContext } from '../../context';
 
 const SinglePost = () => {
@@ -58,7 +58,10 @@ const SinglePost = () => {
     }
   };
 
+  // ⬇ CHANGED: Allow if user is the author OR if the user is an admin
   const isAuthor = user?.id?.toString() === post?.author?._id?.toString();
+  const isAdmin = user?.role === 'admin';
+  const canManagePost = isAuthor || isAdmin;
 
   if (loading) return <Spinner />;
   if (error) return <Typography color="error">{error}</Typography>;
@@ -100,6 +103,9 @@ const SinglePost = () => {
           <Typography variant="subtitle2" color="text.secondary">
             By {post.author?.name || 'Unknown author'}
           </Typography>
+          {isAdmin && !isAuthor && (
+            <Chip label="Admin View" size="small" color="error" variant="outlined" />
+          )}
         </Box>
 
         {/* Categories */}
@@ -137,7 +143,7 @@ const SinglePost = () => {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/*  Rich content */}
+        {/* Rich content */}
         <Box
           sx={{
             fontSize: '1.05rem',
@@ -196,8 +202,8 @@ const SinglePost = () => {
         {/* Comments */}
         <Comments postId={post._id} initialComments={post.comments || []} />
 
-        {/* Author actions */}
-        {isAuthor && (
+        {/* Author/Admin actions */}
+        {canManagePost && (
           <Box sx={{ mt: 5, display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
