@@ -11,7 +11,6 @@ export const useAuth = () => {
     initialized: false
   });
 
-  // Refs to track ongoing requests
   const loginRequestRef = useRef(null);
   const registerRequestRef = useRef(null);
   
@@ -31,7 +30,6 @@ export const useAuth = () => {
   }, [navigate]);
 
   const register = useCallback(async (userData) => {
-    // Prevent duplicate registration
     if (registerRequestRef.current) {
       return registerRequestRef.current;
     }
@@ -77,7 +75,6 @@ export const useAuth = () => {
   }, []);
 
   const login = useCallback(async (credentials) => {
-    // Prevent duplicate login
     if (loginRequestRef.current) {
       return loginRequestRef.current;
     }
@@ -93,7 +90,6 @@ export const useAuth = () => {
         const token = response.data.token;
         localStorage.setItem('token', token);
 
-        // Get user data
         const userResponse = await axios.get('https://blog-system-q65l.onrender.com/api/auth/me', {
           headers: {
             Authorization: `Bearer ${token}`
@@ -130,6 +126,41 @@ export const useAuth = () => {
 
     loginRequestRef.current = requestPromise;
     return requestPromise;
+  }, []);
+
+  const googleLogin = useCallback(async (googleToken) => {
+    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const response = await axios.post(
+        'https://blog-system-q65l.onrender.com/api/auth/google',
+        { token: googleToken }
+      );
+
+      const { token, user } = response.data;
+      if (!token || !user) throw new Error('Missing token or user in response');
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      setAuthState({
+        token,
+        user,
+        error: null,
+        loading: false,
+        initialized: true
+      });
+
+      return response.data;
+    } catch (err) {
+      const error =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Google login failed! Please try again.';
+
+      setAuthState(prev => ({ ...prev, error, loading: false, initialized: true }));
+      throw new Error(error);
+    }
   }, []);
 
   const getMe = useCallback(async (token = authState.token) => {
@@ -183,7 +214,6 @@ export const useAuth = () => {
     }
   }, [authState.token]);
 
-  // Auto-restore authentication
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
@@ -199,9 +229,6 @@ export const useAuth = () => {
             loading: false, 
             initialized: true 
           }));
-          
-          // Optionally validate token with backend
-          // await getMe(token);
         } catch (error) {
           console.error('Error restoring auth:', error);
           localStorage.removeItem('user');
@@ -215,7 +242,6 @@ export const useAuth = () => {
     initializeAuth();
   }, [getMe]);
 
-  // Axios interceptors
   useEffect(() => {
     const responseInterceptor = axios.interceptors.response.use(
       response => response,
@@ -261,6 +287,7 @@ export const useAuth = () => {
     ...authState,
     register,
     login,
+    googleLogin, 
     logout,
     getMe,
     setAuthState
