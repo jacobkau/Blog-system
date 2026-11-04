@@ -8,7 +8,8 @@ import {
   forgotPassword,   
   resetPassword,    
   updatePassword,
-  deleteAccount,  
+  deleteAccount,
+  googleAuth, 
 } from '../controllers/auth.js';
 import { protect } from '../middleware/Auth.js';
 import multer from 'multer';
@@ -19,6 +20,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 *
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', googleAuth); 
 router.put('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.get('/logout', logout);
 router.get('/me', protect, getMe);
