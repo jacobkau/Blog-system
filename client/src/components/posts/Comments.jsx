@@ -15,23 +15,59 @@ const CommentItem = ({
   user, 
   onDelete, 
   onReply, 
-  depth = 0 
+  depth = 0,
+  postId,
+  refreshComments
 }) => {
-  // Find direct children of this comment
   const replies = allComments.filter(c => c.parentComment === comment._id);
-
   const canDelete = user && (user.id === comment.author?._id?.toString() || user.role === 'admin');
+  
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim() || sending) return;
+    
+    setSending(true);
+    try {
+      await commentService.addComment(postId, replyText.trim(), comment._id);
+      setReplyText('');
+      setIsReplying(false);
+      onReply(null); 
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to post reply');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const isReply = depth > 0;
+  const bgColor = isReply ? 'action.hover' : 'transparent';
+  const borderLeft = isReply ? '3px solid' : 'none';
+  const borderColor = isReply ? 'primary.light' : 'transparent';
 
   return (
-    <Box sx={{ ml: depth > 0 ? 4 : 0, mt: 2 }}>
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <Avatar sx={{ width: 36, height: 36 }}>
+    <Box sx={{ mt: 2 }}>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          gap: 2, 
+          p: isReply ? 2 : 0,
+          bgcolor: bgColor,
+          borderRadius: 2,
+          borderLeft,
+          borderColor,
+        }}
+      >
+        <Avatar sx={{ width: 36, height: 36, bgcolor: isReply ? 'secondary.main' : 'primary.main' }}>
           {comment.author?.name?.[0]?.toUpperCase() || '?'}
         </Avatar>
         
         <Box sx={{ flex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle2">
+            <Typography variant="subtitle2" fontWeight={600}>
               {comment.author?.name || 'Unknown'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -40,7 +76,11 @@ const CommentItem = ({
             
             <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
               {depth < 3 && user && (
-                <IconButton size="small" onClick={() => onReply(comment._id)}>
+                <IconButton 
+                  size="small" 
+                  onClick={() => setIsReplying(!isReplying)}
+                  color={isReplying ? "primary" : "default"}
+                >
                   <ReplyIcon fontSize="small" />
                 </IconButton>
               )}
@@ -52,15 +92,47 @@ const CommentItem = ({
             </Box>
           </Box>
           
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, color: 'text.primary' }}>
             {comment.text}
           </Typography>
+
+          {/* Inline Reply Form */}
+          {isReplying && (
+            <Box component="form" onSubmit={handleReplySubmit} sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                minRows={2}
+                placeholder={`Reply to ${comment.author?.name || 'this comment'}...`}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                inputProps={{ maxLength: 1000 }}
+                autoFocus
+              />
+              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  size="small" 
+                  disabled={sending || !replyText.trim()}
+                >
+                  {sending ? 'Posting…' : 'Reply'}
+                </Button>
+                <Button 
+                  size="small" 
+                  onClick={() => setIsReplying(false)}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+          )}
         </Box>
       </Box>
 
-      {/* Render replies recursively */}
       {replies.length > 0 && (
-        <Box sx={{ mt: 1 }}>
+        <Box sx={{ ml: 4, mt: 1 }}>
           {replies.map(reply => (
             <CommentItem 
               key={reply._id} 
@@ -70,6 +142,8 @@ const CommentItem = ({
               onDelete={onDelete}
               onReply={onReply}
               depth={depth + 1}
+              postId={postId}
+              refreshComments={refreshComments}
             />
           ))}
         </Box>
@@ -82,7 +156,6 @@ const Comments = ({ postId, initialComments = [] }) => {
   const { user } = useAuthContext();
   const [comments, setComments] = useState(initialComments);
   const [text, setText] = useState('');
-  const [replyTo, setReplyTo] = useState(null); // ⬅ NEW
   const [sending, setSending] = useState(false);
   const joined = useRef(false);
 
@@ -111,7 +184,6 @@ const Comments = ({ postId, initialComments = [] }) => {
       );
     };
     const onDeleted = (id) => {
-      // Remove the comment and any of its replies
       setComments((prev) => prev.filter((x) => x._id !== id && x.parentComment !== id));
     };
 
@@ -133,9 +205,8 @@ const Comments = ({ postId, initialComments = [] }) => {
     if (!text.trim() || sending) return;
     setSending(true);
     try {
-      await commentService.addComment(postId, text.trim(), replyTo);
+      await commentService.addComment(postId, text.trim(), null); 
       setText('');
-      setReplyTo(null);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to post comment');
     } finally {
@@ -152,40 +223,25 @@ const Comments = ({ postId, initialComments = [] }) => {
     }
   };
 
-  const handleReply = (commentId) => {
-    setReplyTo(commentId);
-    // Scroll to form (optional, just for UX)
-    document.getElementById('comment-form')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Top level comments (no parent)
   const topLevelComments = comments.filter(c => !c.parentComment);
 
   return (
     <Box sx={{ mt: 6 }}>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom fontWeight={700}>
         Comments ({comments.length})
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
       {user ? (
-        <Paper id="comment-form" variant="outlined" sx={{ p: 2, mb: 4 }}>
-          {replyTo && (
-            <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Replying to a comment...
-              </Typography>
-              <Button size="small" onClick={() => setReplyTo(null)}>
-                Cancel Reply
-              </Button>
-            </Box>
-          )}
-          
+        <Paper id="comment-form" variant="outlined" sx={{ p: 2, mb: 4, bgcolor: 'background.default' }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Leave a comment
+          </Typography>
           <TextField
             fullWidth
             multiline
             minRows={2}
-            placeholder={replyTo ? "Write a reply…" : "Write a comment…"}
+            placeholder="Share your thoughts…"
             value={text}
             onChange={(e) => setText(e.target.value)}
             inputProps={{ maxLength: 1000 }}
@@ -196,7 +252,7 @@ const Comments = ({ postId, initialComments = [] }) => {
             disabled={sending || !text.trim()}
             onClick={handleSubmit}
           >
-            {sending ? 'Posting…' : replyTo ? 'Post Reply' : 'Post Comment'}
+            {sending ? 'Posting…' : 'Post Comment'}
           </Button>
         </Paper>
       ) : (
@@ -206,9 +262,9 @@ const Comments = ({ postId, initialComments = [] }) => {
       )}
 
       {topLevelComments.length === 0 ? (
-        <Typography color="text.secondary">No comments yet.</Typography>
+        <Typography color="text.secondary">No comments yet. Be the first to share your thoughts!</Typography>
       ) : (
-        <Stack spacing={3}>
+        <Stack spacing={2}>
           {topLevelComments.map((c) => (
             <CommentItem 
               key={c._id} 
@@ -216,7 +272,9 @@ const Comments = ({ postId, initialComments = [] }) => {
               allComments={comments} 
               user={user}
               onDelete={handleDelete}
-              onReply={handleReply}
+              onReply={() => {}} 
+              postId={postId}
+              depth={0}
             />
           ))}
         </Stack>
