@@ -43,13 +43,17 @@ const Register = () => {
 
     setLoading(true);
     try {
-      
+      // 1. Register the user
       await register({ name, email, password });
+
+      // 2. Send welcome email — matches shared template variables:
+      //    {{subject}} {{message}} {{to_email}} {{from_name}}
+      //    Plain text only (no HTML) so it renders in the shared template.
       try {
         const templateParams = {
           to_email: email,
           from_name: 'Witty Blog Team',
-          subject: 'Welcome to Witty Blog Community!',
+          subject: 'Welcome to Witty Blog!',
           message: [
             `Hi ${name},`,
             '',
@@ -63,6 +67,9 @@ const Register = () => {
           ].join('\n'),
         };
 
+        // Helpful for debugging — remove in production if you prefer
+        console.log('EmailJS payload:', templateParams);
+
         await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_WELCOME_TEMPLATE_ID,
@@ -70,6 +77,7 @@ const Register = () => {
           import.meta.env.VITE_EMAILJS_PUBLIC_KEY
         );
       } catch (emailErr) {
+        // User is registered regardless of email outcome
         console.error(
           'Welcome email failed:',
           emailErr?.text || emailErr?.message
