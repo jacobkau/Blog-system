@@ -4,7 +4,7 @@ import { Container, Typography, Button, Box, Chip, Divider } from '@mui/material
 import DOMPurify from 'dompurify';
 import postService from '../../api/posts';
 import Spinner from '../../components/ui/Spinner';
-import Comments from '../../components/Comments';
+import Comments from '../../components/posts/Comments';
 import { useAuthContext } from '../../context';
 
 const SinglePost = () => {
