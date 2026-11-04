@@ -31,7 +31,8 @@ const Login = () => {
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, error: authError } = useAuthContext();
+  // ⬇ Destructure googleLogin
+  const { login, googleLogin, error: authError } = useAuthContext();
   const navigate = useNavigate();
 
   const { email, password } = formData;
@@ -79,26 +80,11 @@ const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const response = await fetch(
-        'https://blog-system-q65l.onrender.com/api/auth/google',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: credentialResponse.credential }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        toast.success('Logged in with Google!');
-        navigate('/');
-      } else {
-        toast.error(data.error || 'Google auth failed');
-      }
+      await googleLogin(credentialResponse.credential);
+      toast.success('Logged in with Google!');
+      navigate('/');
     } catch (err) {
-      toast.error('Network error during Google login');
+      toast.error(err.message || 'Google auth failed');
     }
   };
 
@@ -228,7 +214,7 @@ const Login = () => {
             onError={() => toast.error('Google Login Failed')}
             useOneTap
             shape="pill"
-            width="100%"
+            width="300" 
             text="continue_with"
           />
         </Box>
