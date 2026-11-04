@@ -98,3 +98,40 @@ export const deleteComment = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({ success: true, data: {} });
 });
+// @desc    Like/Unlike a comment
+// @route   PUT /api/posts/:postId/comments/:commentId/like
+// @access  Private
+export const likeComment = asyncHandler(async (req, res, next) => {
+  const comment = await Comment.findById(req.params.commentId);
+  if (!comment) return next(new ErrorResponse('Comment not found', 404));
+
+  const isLiked = comment.likes.includes(req.user.id);
+
+  if (isLiked) {
+    comment.likes = comment.likes.filter(id => id.toString() !== req.user.id);
+  } else {
+    comment.likes.push(req.user.id);
+  }
+
+  await comment.save();
+  res.status(200).json({ success: true, likes: comment.likes });
+});
+
+// @desc    Edit a comment
+// @route   PUT /api/posts/:postId/comments/:commentId
+// @access  Private (Author only)
+export const editComment = asyncHandler(async (req, res, next) => {
+  let comment = await Comment.findById(req.params.commentId);
+  if (!comment) return next(new ErrorResponse('Comment not found', 404));
+
+  if (comment.author.toString() !== req.user.id) {
+    return next(new ErrorResponse('Not authorized to edit this comment', 401));
+  }
+
+  comment.text = req.body.text;
+  await comment.save();
+  
+  comment = await comment.populate('author', 'name email avatar');
+
+  res.status(200).json({ success: true, data: comment });
+});
