@@ -139,13 +139,17 @@ export const useAuth = () => {
 
       const { token, user } = response.data;
       if (!token || !user) throw new Error('Missing token or user in response');
+      const formattedUser = {
+        ...user,
+        id: user._id || user.id
+      };
 
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(formattedUser));
 
       setAuthState({
         token,
-        user,
+        user: formattedUser,
         error: null,
         loading: false,
         initialized: true
