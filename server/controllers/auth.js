@@ -3,6 +3,9 @@ import asyncHandler from '../middleware/async.js';
 import ErrorResponse from '../utils/errorResponse.js';
 import crypto from 'crypto';
 import Post from '../models/Post.js'; 
+import { OAuth2Client } from 'google-auth-library'; 
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); 
 
 // @desc    Generate password reset token
 // @route   POST /api/auth/forgot-password
@@ -10,7 +13,6 @@ import Post from '../models/Post.js';
 export const forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
 
-  // Same generic message prevents email enumeration
   const GENERIC = {
     success: true,
     message: 'If that email is registered, a reset link has been sent.',
@@ -22,12 +24,10 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 
   const user = await User.findOne({ email });
 
-  // Even if user not found, respond with same message
   if (!user) {
     return res.json(GENERIC);
   }
 
-  // Generate raw + hashed token
   const rawToken = crypto.randomBytes(32).toString('hex');
   const hashedToken = crypto
     .createHash('sha256')
@@ -41,7 +41,6 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
   const resetLink = `${clientUrl}/reset-password/${rawToken}`;
 
-  // Return the token + user info so the frontend can send via EmailJS
   res.status(200).json({
     success: true,
     message: 'Reset link generated',
@@ -92,17 +91,12 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
   });
 });
 
-
-
-
-
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(async (req, res, next) => {
   const { name, email, password } = req.body;
 
-  // Basic validation
   if (!name || !email || !password) {
     return next(
       new ErrorResponse('Please provide name, email and password', 400)
@@ -120,6 +114,47 @@ export const register = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 201, res);
 });
 
+// @desc    Authenticate with Google
+// @route   POST /api/auth/google
+// @access  Public
+export const googleAuth = asyncHandler(async (req, res, next) => { 
+  const { token } = req.body;
+
+  if (!token) {
+    return next(new ErrorResponse('Google token is required', 400));
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user. 
+      // Since your schema likely requires a password, we generate a random one.
+      // The user will never use this password; they will always log in via Google.
+      const randomPassword = crypto.randomBytes(16).toString('hex') + 'Aa1!';
+      
+      user = await User.create({
+        name,
+        email,
+        password: randomPassword,
+        avatar: picture || undefined, 
+      });
+    }
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    return next(new ErrorResponse('Invalid Google token', 401));
+  }
+});
 
 // @desc    Delete current user's account
 // @route   DELETE /api/auth/account
@@ -131,7 +166,6 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('User not found', 404));
   }
 
-  // Prevent the last admin from deleting themselves
   if (user.role === 'admin') {
     const adminCount = await User.countDocuments({ role: 'admin' });
     if (adminCount <= 1) {
@@ -141,10 +175,7 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
     }
   }
 
-  //  Cascade delete — remove all posts authored by this user first
   await Post.deleteMany({ author: user._id });
-
-  // Then delete the user
   await user.deleteOne();
 
   res.cookie('token', 'none', {
@@ -164,28 +195,24 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // 1. Validate input
   if (!email || !password) {
     return next(
       new ErrorResponse('Please provide email and password', 400)
     );
   }
 
-  // 2. Find user and explicitly include password field
   const user = await User.findOne({ email }).select('+password');
 
   if (!user) {
     return next(new ErrorResponse('Invalid credentials', 401));
   }
 
-  // 3. Compare passwords
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
     return next(new ErrorResponse('Invalid credentials', 401));
   }
 
-  // 4. Send token
   sendTokenResponse(user, 200, res);
 });
 
