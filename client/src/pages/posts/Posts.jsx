@@ -25,7 +25,7 @@ const Posts = () => {
           page: currentPage,
           limit: postsPerPage,
           sort: '-createdAt',
-          search: searchQuery || undefined, 
+          search: searchQuery || undefined,
         });
 
         const postsData = response?.data || response?.posts || response;
@@ -53,7 +53,6 @@ const Posts = () => {
     fetchPosts();
   }, [currentPage, searchQuery]);
 
-  //  Reset to page 1 whenever the search query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -121,7 +120,6 @@ const Posts = () => {
             <PostList posts={posts} />
           </Grid>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, flexWrap: 'wrap' }}>
               <Button
@@ -135,7 +133,6 @@ const Posts = () => {
 
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((page) => {
-                  // Show first, last, current, and one on each side
                   return (
                     page === 1 ||
                     page === totalPages ||
@@ -143,25 +140,21 @@ const Posts = () => {
                   );
                 })
                 .map((page, idx, arr) => {
-                  // Insert ellipsis where there's a gap
                   const prev = arr[idx - 1];
                   const showEllipsis = prev && page - prev > 1;
                   return (
-                    <>
+                    <Box key={page} sx={{ display: 'contents' }}>
                       {showEllipsis && (
-                        <Typography key={`gap-${page}`} sx={{ mx: 1, alignSelf: 'center' }}>
-                          …
-                        </Typography>
+                        <Typography sx={{ mx: 1, alignSelf: 'center' }}>…</Typography>
                       )}
                       <Button
-                        key={page}
                         variant={page === currentPage ? 'contained' : 'outlined'}
                         onClick={() => handlePageChange(page)}
                         sx={{ mx: 0.5, mb: 1, minWidth: 36 }}
                       >
                         {page}
                       </Button>
-                    </>
+                    </Box>
                   );
                 })}
 
