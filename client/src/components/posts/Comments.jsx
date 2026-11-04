@@ -14,19 +14,16 @@ const CommentItem = ({
   allComments, 
   user, 
   onDelete, 
-  onReply, 
-  replyTo,       
-  setReplyTo,    
   depth = 0,
   postId
 }) => {
   const replies = allComments.filter(c => c.parentComment === comment._id);
   const canDelete = user && (user.id === comment.author?._id?.toString() || user.role === 'admin');
   
+  // ⬇ State is now local to the comment
+  const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
-
-  const isReplying = replyTo === comment._id;
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +33,7 @@ const CommentItem = ({
     try {
       await commentService.addComment(postId, replyText.trim(), comment._id);
       setReplyText('');
-      setReplyTo(null); 
+      setIsReplying(false); 
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to post reply');
     } finally {
@@ -48,6 +45,7 @@ const CommentItem = ({
 
   return (
     <Box sx={{ mt: 2, ml: isNested ? 4 : 0 }}>
+      {/* Comment Header & Body */}
       <Box 
         sx={{ 
           display: 'flex', 
@@ -80,7 +78,7 @@ const CommentItem = ({
               {depth < 3 && user && (
                 <IconButton 
                   size="small" 
-                  onClick={() => setReplyTo(isReplying ? null : comment._id)}
+                  onClick={() => setIsReplying(!isReplying)}
                   color={isReplying ? "primary" : "default"}
                 >
                   <ReplyIcon fontSize="small" />
@@ -98,8 +96,9 @@ const CommentItem = ({
             {comment.text}
           </Typography>
 
+          {/* Inline Reply Form */}
           {isReplying && (
-            <Box component="form" onSubmit={handleReplySubmit} sx={{ mt: 2 }}>
+            <Box component="form" onSubmit={handleReplySubmit} sx={{ mt: 2, mb: 2 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -122,7 +121,7 @@ const CommentItem = ({
                 </Button>
                 <Button 
                   size="small" 
-                  onClick={() => setReplyTo(null)}
+                  onClick={() => setIsReplying(false)}
                 >
                   Cancel
                 </Button>
@@ -141,9 +140,6 @@ const CommentItem = ({
               allComments={allComments} 
               user={user}
               onDelete={onDelete}
-              onReply={onReply}
-              replyTo={replyTo}
-              setReplyTo={setReplyTo}
               depth={depth + 1}
               postId={postId}
             />
@@ -158,7 +154,6 @@ const Comments = ({ postId, initialComments = [] }) => {
   const { user } = useAuthContext();
   const [comments, setComments] = useState(initialComments);
   const [text, setText] = useState('');
-  const [replyTo, setReplyTo] = useState(null); 
   const [sending, setSending] = useState(false);
   const joined = useRef(false);
 
@@ -235,6 +230,7 @@ const Comments = ({ postId, initialComments = [] }) => {
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
+      {/* Main Top-Level Comment Form */}
       {user ? (
         <Paper id="comment-form" variant="outlined" sx={{ p: 2, mb: 4, bgcolor: 'background.default' }}>
           <Typography variant="subtitle2" gutterBottom>
@@ -275,9 +271,6 @@ const Comments = ({ postId, initialComments = [] }) => {
               allComments={comments} 
               user={user}
               onDelete={handleDelete}
-              onReply={() => {}} 
-              replyTo={replyTo}
-              setReplyTo={setReplyTo}
               postId={postId}
               depth={0}
             />
