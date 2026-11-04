@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Box, Typography, TextField, Button, Avatar, Stack, IconButton, Divider, Paper,
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ReplyIcon from '@mui/icons-material/Reply';
+import EditIcon from '@mui/icons-material/Edit';
+import { Favorite, FavoriteBorder } from '@mui/icons-material'; 
 import { toast } from 'react-toastify';
 import commentService from '../../api/comments';
 import { socket } from '../../api/socket';
@@ -18,12 +21,24 @@ const CommentItem = ({
   postId
 }) => {
   const replies = allComments.filter(c => c.parentComment === comment._id);
-  const canDelete = user && (user.id === comment.author?._id?.toString() || user.role === 'admin');
   
-  // ⬇ State is now local to the comment
+  // Check permissions
+  const isAuthor = user?.id === comment.author?._id?.toString();
+  const canDelete = user && (isAuthor || user.role === 'admin');
+  const canEdit = user && isAuthor;
+  
+  // Local state for forms
   const [isReplying, setIsReplying] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [editText, setEditText] = useState(comment.text);
   const [sending, setSending] = useState(false);
+  
+  // Local state for likes
+  const [likes, setLikes] = useState(comment.likes || []);
+  const isLiked = user && likes.includes(user.id);
+
+  const isNested = depth > 0;
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -41,11 +56,35 @@ const CommentItem = ({
     }
   };
 
-  const isNested = depth > 0;
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editText.trim() || sending) return;
+
+    setSending(true);
+    try {
+      await commentService.editComment(postId, comment._id, editText.trim());
+      setIsEditing(false);
+      // The socket will update the UI, but we can also update local state just in case
+      comment.text = editText; 
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to edit comment');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) return toast.error('Log in to like comments');
+    try {
+      const res = await commentService.likeComment(postId, comment._id);
+      setLikes(res.likes);
+    } catch (err) {
+      toast.error('Failed to like comment');
+    }
+  };
 
   return (
     <Box sx={{ mt: 2, ml: isNested ? 4 : 0 }}>
-      {/* Comment Header & Body */}
       <Box 
         sx={{ 
           display: 'flex', 
@@ -57,24 +96,58 @@ const CommentItem = ({
           borderColor: 'primary.light',
         }}
       >
-        <Avatar sx={{ 
-          width: 36, 
-          height: 36, 
-          bgcolor: isNested ? 'secondary.main' : 'primary.main' 
-        }}>
+        {/* CLICKABLE AVATAR */}
+        <Avatar 
+          component={Link}
+          to={`/profile/${comment.author?._id}`}
+          src={comment.author?.avatar} 
+          sx={{ 
+            width: 36, 
+            height: 36, 
+            bgcolor: isNested ? 'secondary.main' : 'primary.main',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}
+        >
           {comment.author?.name?.[0]?.toUpperCase() || '?'}
         </Avatar>
         
         <Box sx={{ flex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle2" fontWeight={600}>
+            {/* CLICKABLE NAME */}
+            <Typography 
+              component={Link}
+              to={`/profile/${comment.author?._id}`}
+              variant="subtitle2" 
+              fontWeight={600}
+              sx={{ 
+                color: 'text.primary', 
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
               {comment.author?.name || 'Unknown'}
             </Typography>
+            
             <Typography variant="caption" color="text.secondary">
               {new Date(comment.createdAt).toLocaleString()}
             </Typography>
             
+            {/* ACTION BUTTONS */}
             <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+              {/* Like Button */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <IconButton size="small" onClick={handleLike} color={isLiked ? 'error' : 'default'}>
+                  {isLiked ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
+                </IconButton>
+                {likes.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    {likes.length}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Reply Button */}
               {depth < 3 && user && (
                 <IconButton 
                   size="small" 
@@ -84,6 +157,15 @@ const CommentItem = ({
                   <ReplyIcon fontSize="small" />
                 </IconButton>
               )}
+              
+              {/* Edit Button */}
+              {canEdit && !isEditing && (
+                <IconButton size="small" onClick={() => setIsEditing(true)}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+
+              {/* Delete Button */}
               {canDelete && (
                 <IconButton size="small" color="error" onClick={() => onDelete(comment._id)}>
                   <DeleteIcon fontSize="small" />
@@ -92,11 +174,34 @@ const CommentItem = ({
             </Box>
           </Box>
           
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, color: 'text.primary' }}>
-            {comment.text}
-          </Typography>
+          {/* EDIT MODE */}
+          {isEditing ? (
+            <Box component="form" onSubmit={handleEditSubmit} sx={{ mt: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                autoFocus
+              />
+              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                <Button type="submit" variant="contained" size="small" disabled={sending}>
+                  Save
+                </Button>
+                <Button size="small" onClick={() => { setIsEditing(false); setEditText(comment.text); }}>
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            /* VIEW MODE */
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, color: 'text.primary' }}>
+              {comment.text}
+            </Typography>
+          )}
 
-          {/* Inline Reply Form */}
+          {/* INLINE REPLY FORM */}
           {isReplying && (
             <Box component="form" onSubmit={handleReplySubmit} sx={{ mt: 2, mb: 2 }}>
               <TextField
@@ -131,6 +236,7 @@ const CommentItem = ({
         </Box>
       </Box>
 
+      {/* RENDER NESTED REPLIES */}
       {replies.length > 0 && (
         <Box sx={{ mt: 1 }}>
           {replies.map(reply => (
@@ -184,13 +290,21 @@ const Comments = ({ postId, initialComments = [] }) => {
     const onDeleted = (id) => {
       setComments((prev) => prev.filter((x) => x._id !== id && x.parentComment !== id));
     };
+    // Add socket listener for edits if you emit it from backend
+    const onUpdated = (updatedComment) => {
+      setComments((prev) => 
+        prev.map((c) => c._id === updatedComment._id ? updatedComment : c)
+      );
+    };
 
     socket.on('comment:created', onCreated);
     socket.on('comment:deleted', onDeleted);
+    socket.on('comment:updated', onUpdated);
 
     return () => {
       socket.off('comment:created', onCreated);
       socket.off('comment:deleted', onDeleted);
+      socket.off('comment:updated', onUpdated);
       if (joined.current) {
         socket.emit('leavePost', postId);
         joined.current = false;
@@ -230,7 +344,6 @@ const Comments = ({ postId, initialComments = [] }) => {
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
-      {/* Main Top-Level Comment Form */}
       {user ? (
         <Paper id="comment-form" variant="outlined" sx={{ p: 2, mb: 4, bgcolor: 'background.default' }}>
           <Typography variant="subtitle2" gutterBottom>
