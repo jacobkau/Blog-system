@@ -7,6 +7,20 @@ import { OAuth2Client } from 'google-auth-library';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); 
 
+// @desc    Get user by ID (Public)
+// @route   GET /api/auth/user/:id
+// @access  Public
+export const getUserById = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id).select('name email avatar bio location website createdAt');
+
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  res.status(200).json({ success: true, data: user });
+});
+
+
 // @desc    Generate password reset token
 // @route   POST /api/auth/forgot-password
 // @access  Public
