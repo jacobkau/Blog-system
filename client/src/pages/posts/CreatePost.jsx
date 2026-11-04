@@ -46,7 +46,6 @@ const CreatePost = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // ✅ Rich text content (HTML)
   const [contentHTML, setContentHTML] = useState('');
 
   const {
