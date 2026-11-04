@@ -45,6 +45,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/profile/:id" element={<UserProfile />} /> 
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
@@ -57,7 +58,6 @@ function App() {
             <Route path="/category/:slugOrId" element={<CategoryPosts />} />
             <Route path="/create-category" element={<CreateCategory />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:id" element={<UserProfile />} /> 
             
             
             {/* Admin Dashboard Route */}
