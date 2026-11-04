@@ -13,7 +13,7 @@ export const getComments = asyncHandler(async (req, res, next) => {
   if (!post) return next(new ErrorResponse('Post not found', 404));
 
   const comments = await Comment.find({ post: postId })
-    .populate('author', 'name email')
+    .populate('author', 'name email avatar') 
     .sort('createdAt');
 
   res.status(200).json({ success: true, count: comments.length, data: comments });
@@ -50,7 +50,8 @@ export const addComment = asyncHandler(async (req, res, next) => {
   post.comments.push(comment._id);
   await post.save();
 
-  comment = await comment.populate('author', 'name email');
+  comment = await comment.populate('author', 'name email avatar'); 
+  
   const io = req.app.get('io');
   io.to(`post:${postId}`).emit('comment:created', comment);
 
@@ -93,16 +94,20 @@ export const deleteComment = asyncHandler(async (req, res, next) => {
   await Post.findByIdAndUpdate(postId, {
     $pull: { comments: { $in: allIds } },
   });
+  
   const io = req.app.get('io');
   io.to(`post:${postId}`).emit('comment:deleted', commentId);
 
   res.status(200).json({ success: true, data: {} });
 });
+
 // @desc    Like/Unlike a comment
 // @route   PUT /api/posts/:postId/comments/:commentId/like
 // @access  Private
 export const likeComment = asyncHandler(async (req, res, next) => {
-  const comment = await Comment.findById(req.params.commentId);
+  const { postId, commentId } = req.params;
+
+  const comment = await Comment.findById(commentId);
   if (!comment) return next(new ErrorResponse('Comment not found', 404));
 
   const isLiked = comment.likes.includes(req.user.id);
@@ -114,6 +119,10 @@ export const likeComment = asyncHandler(async (req, res, next) => {
   }
 
   await comment.save();
+
+  const io = req.app.get('io');
+  io.to(`post:${postId}`).emit('comment:updated', comment);
+
   res.status(200).json({ success: true, likes: comment.likes });
 });
 
@@ -121,7 +130,9 @@ export const likeComment = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/posts/:postId/comments/:commentId
 // @access  Private (Author only)
 export const editComment = asyncHandler(async (req, res, next) => {
-  let comment = await Comment.findById(req.params.commentId);
+  const { postId, commentId } = req.params;
+
+  let comment = await Comment.findById(commentId);
   if (!comment) return next(new ErrorResponse('Comment not found', 404));
 
   if (comment.author.toString() !== req.user.id) {
@@ -131,7 +142,10 @@ export const editComment = asyncHandler(async (req, res, next) => {
   comment.text = req.body.text;
   await comment.save();
   
-  comment = await comment.populate('author', 'name email avatar');
+  comment = await comment.populate('author', 'name email avatar'); 
+
+  const io = req.app.get('io');
+  io.to(`post:${postId}`).emit('comment:updated', comment);
 
   res.status(200).json({ success: true, data: comment });
 });
