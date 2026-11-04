@@ -31,7 +31,6 @@ const Login = () => {
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ⬇ Destructure googleLogin
   const { login, googleLogin, error: authError } = useAuthContext();
   const navigate = useNavigate();
 
@@ -212,10 +211,10 @@ const Login = () => {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => toast.error('Google Login Failed')}
-            useOneTap
             shape="pill"
             width="300" 
             text="continue_with"
+            use_fedcm_for_button={true} 
           />
         </Box>
 
