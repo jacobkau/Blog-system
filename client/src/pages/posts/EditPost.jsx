@@ -28,7 +28,7 @@ const schema = yup.object().shape({
     .string()
     .required('Excerpt is required')
     .max(200, 'Excerpt must be less than 200 characters'),
-  category: yup.string().required('Please select a category'), 
+  category: yup.string().required('Please select exactly one category'),
 });
 
 const getTextLength = (html = '') =>
@@ -47,6 +47,8 @@ const EditPost = () => {
 
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
+  
+  const [selectOpen, setSelectOpen] = useState(false);
 
   const {
     register,
@@ -111,6 +113,11 @@ const EditPost = () => {
 
     fetchData();
   }, [id, reset, user]);
+
+  const handleCategoryChange = (event) => {
+    setValue('category', event.target.value, { shouldValidate: true });
+    setSelectOpen(false);
+  };
 
   const onSubmit = async (data) => {
     if (!user) return;
@@ -191,12 +198,10 @@ const EditPost = () => {
               labelId="category-label"
               label="Category"
               value={selectedCategory}
-              onChange={(e) => setValue('category', e.target.value, { shouldValidate: true })}
-              MenuProps={{
-                PaperProps: {
-                  style: { maxHeight: 250 },
-                },
-              }}
+              onChange={handleCategoryChange}
+              open={selectOpen}                  
+              onOpen={() => setSelectOpen(true)}
+              onClose={() => setSelectOpen(false)} 
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
