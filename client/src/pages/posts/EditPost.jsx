@@ -13,7 +13,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip,
   CircularProgress,
 } from '@mui/material';
 import postService from '../../api/posts';
@@ -29,13 +28,8 @@ const schema = yup.object().shape({
     .string()
     .required('Excerpt is required')
     .max(200, 'Excerpt must be less than 200 characters'),
-  categories: yup.array().min(1, 'Select at least one category'),
+  category: yup.string().required('Please select a category'), 
 });
-
-const getCategoryIds = (arr = []) =>
-  arr.map((cat) =>
-    typeof cat === 'object' && cat._id ? cat._id.toString() : cat.toString()
-  );
 
 const getTextLength = (html = '') =>
   html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
@@ -63,6 +57,8 @@ const EditPost = () => {
     reset,
   } = useForm({ resolver: yupResolver(schema) });
 
+  const selectedCategory = watch('category');
+
   useEffect(() => {
     if (!id || !/^[a-f\d]{24}$/i.test(id)) {
       setError('Invalid post ID');
@@ -86,10 +82,16 @@ const EditPost = () => {
           : [];
         setCategories(catList);
 
+        let catId = '';
+        if (fetchedPost.categories && fetchedPost.categories.length > 0) {
+          const cat = fetchedPost.categories[0];
+          catId = typeof cat === 'object' ? cat._id : cat;
+        }
+
         reset({
           title: fetchedPost.title,
           excerpt: fetchedPost.excerpt,
-          categories: getCategoryIds(fetchedPost.categories || []),
+          category: catId,
         });
 
         setContentHTML(fetchedPost.content || '');
@@ -126,7 +128,7 @@ const EditPost = () => {
         title: data.title,
         content: contentHTML,
         excerpt: data.excerpt,
-        categories: data.categories,
+        categories: [data.category], 
         featuredImage, 
       });
       navigate(`/posts/${id}`);
@@ -183,36 +185,18 @@ const EditPost = () => {
             }
           />
 
-          <FormControl fullWidth margin="normal" error={!!errors.categories}>
-            <InputLabel id="category-select-label">Categories</InputLabel>
+          <FormControl fullWidth margin="normal" error={!!errors.category}>
+            <InputLabel id="category-label">Category</InputLabel>
             <Select
-              labelId="category-select-label"
-              id="category-select"
-              multiple
-              value={watch('categories') || []}
-              onChange={(e) =>
-                setValue('categories', e.target.value, { shouldValidate: true })
-              }
-              label="Categories"
+              labelId="category-label"
+              label="Category"
+              value={selectedCategory}
+              onChange={(e) => setValue('category', e.target.value, { shouldValidate: true })}
               MenuProps={{
-                disablePortal: false,
                 PaperProps: {
-                  style: {
-                    maxHeight: 250,
-                    width: 250,
-                  },
+                  style: { maxHeight: 250 },
                 },
               }}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip
-                      key={value}
-                      label={categories.find((c) => c._id === value)?.name || value}
-                    />
-                  ))}
-                </Box>
-              )}
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
@@ -220,9 +204,9 @@ const EditPost = () => {
                 </MenuItem>
               ))}
             </Select>
-            {errors.categories && (
+            {errors.category && (
               <Typography variant="caption" color="error">
-                {errors.categories.message}
+                {errors.category.message}
               </Typography>
             )}
           </FormControl>
