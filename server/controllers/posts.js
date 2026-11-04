@@ -44,7 +44,7 @@ const buildPostQuery = (req) => {
   return query;
 };
 
-// @desc    Get all posts (with optional search + filters)
+// @desc    Get all posts
 // @route   GET /api/posts
 // @access  Public
 export const getPosts = asyncHandler(async (req, res) => {
@@ -76,7 +76,7 @@ export const getPosts = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get posts by category (with optional search)
+// @desc    Get posts by category
 // @route   GET /api/posts/category/:categoryId
 // @access  Public
 export const getPostsByCategory = asyncHandler(async (req, res, next) => {
@@ -196,7 +196,7 @@ export const updatePost = asyncHandler(async (req, res, next) => {
   if (!isAuthor && !isAdmin) {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to update this post`,
+        `User ${req.user.email} is not authorized to update this post`,
         401
       )
     );
@@ -243,7 +243,7 @@ export const deletePost = asyncHandler(async (req, res, next) => {
   if (!isAuthor && !isAdmin) {
     return next(
       new ErrorResponse(
-        `User ${req.user.id} is not authorized to delete this post`,
+        `User ${req.user.email} is not authorized to delete this post`,
         401
       )
     );
