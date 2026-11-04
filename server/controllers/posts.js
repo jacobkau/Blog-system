@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Post from '../models/Post.js';
 import Category from '../models/Category.js';
+import Comment from '../models/Comment.js';
 import ErrorResponse from '../utils/errorResponse.js';
 import asyncHandler from '../middleware/async.js';
 
@@ -125,7 +126,12 @@ export const getPostsByCategory = asyncHandler(async (req, res, next) => {
 export const getPost = asyncHandler(async (req, res, next) => {
   const post = await Post.findById(req.params.id)
     .populate('categories')
-    .populate('author', '_id name email');
+    .populate('author', '_id name email')
+    .populate({
+      path: 'comments',
+      populate: { path: 'author', select: 'name email' },
+      options: { sort: { createdAt: 1 } },
+    });
 
   if (!post) {
     return next(
@@ -240,6 +246,9 @@ export const deletePost = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  // Clean up comments belonging to this post
+  await Comment.deleteMany({ post: post._id });
 
   await post.deleteOne();
 
