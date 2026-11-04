@@ -46,6 +46,9 @@ const CreatePost = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
+  
+  // ⬇ NEW: State to control the dropdown
+  const [selectOpen, setSelectOpen] = useState(false);
 
   const {
     register,
@@ -109,7 +112,7 @@ const CreatePost = () => {
         content: contentHTML,
         excerpt: data.excerpt,
         categories: data.categories,
-        featuredImage, // ⬅ NEW
+        featuredImage,
       });
       navigate('/posts');
     } catch (err) {
@@ -166,6 +169,9 @@ const CreatePost = () => {
               multiple
               value={selectedCategories}
               onChange={handleCategoryChange}
+              open={selectOpen}                  // ⬇ Control state
+              onOpen={() => setSelectOpen(true)} // ⬇ Control state
+              onClose={() => setSelectOpen(false)} // ⬇ Control state
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(Array.isArray(selected) ? selected : []).map((value) => (
