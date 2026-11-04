@@ -15,16 +15,18 @@ const CommentItem = ({
   user, 
   onDelete, 
   onReply, 
+  replyTo,       
+  setReplyTo,    
   depth = 0,
-  postId,
-  refreshComments
+  postId
 }) => {
   const replies = allComments.filter(c => c.parentComment === comment._id);
   const canDelete = user && (user.id === comment.author?._id?.toString() || user.role === 'admin');
   
-  const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
+
+  const isReplying = replyTo === comment._id;
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +36,7 @@ const CommentItem = ({
     try {
       await commentService.addComment(postId, replyText.trim(), comment._id);
       setReplyText('');
-      setIsReplying(false);
-      onReply(null); 
+      setReplyTo(null); 
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to post reply');
     } finally {
@@ -43,25 +44,26 @@ const CommentItem = ({
     }
   };
 
-  const isReply = depth > 0;
-  const bgColor = isReply ? 'action.hover' : 'transparent';
-  const borderLeft = isReply ? '3px solid' : 'none';
-  const borderColor = isReply ? 'primary.light' : 'transparent';
+  const isNested = depth > 0;
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 2, ml: isNested ? 4 : 0 }}>
       <Box 
         sx={{ 
           display: 'flex', 
-          gap: 2, 
-          p: isReply ? 2 : 0,
-          bgcolor: bgColor,
+          gap: 2,
+          bgcolor: isNested ? 'action.hover' : 'transparent',
+          p: isNested ? 2 : 0,
           borderRadius: 2,
-          borderLeft,
-          borderColor,
+          borderLeft: isNested ? '3px solid' : 'none',
+          borderColor: 'primary.light',
         }}
       >
-        <Avatar sx={{ width: 36, height: 36, bgcolor: isReply ? 'secondary.main' : 'primary.main' }}>
+        <Avatar sx={{ 
+          width: 36, 
+          height: 36, 
+          bgcolor: isNested ? 'secondary.main' : 'primary.main' 
+        }}>
           {comment.author?.name?.[0]?.toUpperCase() || '?'}
         </Avatar>
         
@@ -78,7 +80,7 @@ const CommentItem = ({
               {depth < 3 && user && (
                 <IconButton 
                   size="small" 
-                  onClick={() => setIsReplying(!isReplying)}
+                  onClick={() => setReplyTo(isReplying ? null : comment._id)}
                   color={isReplying ? "primary" : "default"}
                 >
                   <ReplyIcon fontSize="small" />
@@ -96,7 +98,6 @@ const CommentItem = ({
             {comment.text}
           </Typography>
 
-          {/* Inline Reply Form */}
           {isReplying && (
             <Box component="form" onSubmit={handleReplySubmit} sx={{ mt: 2 }}>
               <TextField
@@ -121,7 +122,7 @@ const CommentItem = ({
                 </Button>
                 <Button 
                   size="small" 
-                  onClick={() => setIsReplying(false)}
+                  onClick={() => setReplyTo(null)}
                 >
                   Cancel
                 </Button>
@@ -132,7 +133,7 @@ const CommentItem = ({
       </Box>
 
       {replies.length > 0 && (
-        <Box sx={{ ml: 4, mt: 1 }}>
+        <Box sx={{ mt: 1 }}>
           {replies.map(reply => (
             <CommentItem 
               key={reply._id} 
@@ -141,9 +142,10 @@ const CommentItem = ({
               user={user}
               onDelete={onDelete}
               onReply={onReply}
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
               depth={depth + 1}
               postId={postId}
-              refreshComments={refreshComments}
             />
           ))}
         </Box>
@@ -156,6 +158,7 @@ const Comments = ({ postId, initialComments = [] }) => {
   const { user } = useAuthContext();
   const [comments, setComments] = useState(initialComments);
   const [text, setText] = useState('');
+  const [replyTo, setReplyTo] = useState(null); 
   const [sending, setSending] = useState(false);
   const joined = useRef(false);
 
@@ -273,6 +276,8 @@ const Comments = ({ postId, initialComments = [] }) => {
               user={user}
               onDelete={handleDelete}
               onReply={() => {}} 
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
               postId={postId}
               depth={0}
             />
