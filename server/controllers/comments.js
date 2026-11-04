@@ -1,0 +1,78 @@
+import Comment from '../models/Comment.js';
+import Post from '../models/Post.js';
+import asyncHandler from '../middleware/async.js';
+import ErrorResponse from '../utils/errorResponse.js';
+
+// @desc    Get comments for a post
+// @route   GET /api/posts/:postId/comments
+// @access  Public
+export const getComments = asyncHandler(async (req, res, next) => {
+  const { postId } = req.params;
+
+  const post = await Post.findById(postId).select('_id');
+  if (!post) return next(new ErrorResponse('Post not found', 404));
+
+  const comments = await Comment.find({ post: postId })
+    .populate('author', 'name email')
+    .sort('createdAt');
+
+  res.status(200).json({ success: true, count: comments.length, data: comments });
+});
+
+// @desc    Add a comment
+// @route   POST /api/posts/:postId/comments
+// @access  Private
+export const addComment = asyncHandler(async (req, res, next) => {
+  const { postId } = req.params;
+  const { text } = req.body;
+
+  if (!text || !text.trim()) {
+    return next(new ErrorResponse('Comment text is required', 400));
+  }
+
+  const post = await Post.findById(postId);
+  if (!post) return next(new ErrorResponse('Post not found', 404));
+
+  let comment = await Comment.create({
+    text: text.trim(),
+    post: postId,
+    author: req.user._id,
+  });
+
+  // Keep Post.comments in sync
+  post.comments.push(comment._id);
+  await post.save();
+
+  comment = await comment.populate('author', 'name email');
+
+  // Broadcast to everyone viewing this post
+  const io = req.app.get('io');
+  io.to(`post:${postId}`).emit('comment:created', comment);
+
+  res.status(201).json({ success: true, data: comment });
+});
+
+// @desc    Delete a comment
+// @route   DELETE /api/posts/:postId/comments/:commentId
+// @access  Private (author of comment, post author, or admin)
+export const deleteComment = asyncHandler(async (req, res, next) => {
+  const { postId, commentId } = req.params;
+
+  const comment = await Comment.findById(commentId);
+  if (!comment) return next(new ErrorResponse('Comment not found', 404));
+
+  const isCommentAuthor = comment.author.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isCommentAuthor && !isAdmin) {
+    return next(new ErrorResponse('Not authorized to delete this comment', 401));
+  }
+
+  await Comment.deleteOne({ _id: commentId });
+  await Post.findByIdAndUpdate(postId, { $pull: { comments: commentId } });
+
+  const io = req.app.get('io');
+  io.to(`post:${postId}`).emit('comment:deleted', commentId);
+
+  res.status(200).json({ success: true, data: {} });
+});
