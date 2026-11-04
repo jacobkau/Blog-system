@@ -107,7 +107,7 @@ export const deleteComment = asyncHandler(async (req, res, next) => {
 export const likeComment = asyncHandler(async (req, res, next) => {
   const { postId, commentId } = req.params;
 
-  const comment = await Comment.findById(commentId);
+  let comment = await Comment.findById(commentId);
   if (!comment) return next(new ErrorResponse('Comment not found', 404));
 
   const isLiked = comment.likes.includes(req.user.id);
@@ -119,6 +119,9 @@ export const likeComment = asyncHandler(async (req, res, next) => {
   }
 
   await comment.save();
+
+  // ⬇ FIX: We must populate the author BEFORE emitting the socket event
+  comment = await comment.populate('author', 'name email avatar');
 
   const io = req.app.get('io');
   io.to(`post:${postId}`).emit('comment:updated', comment);
@@ -142,6 +145,7 @@ export const editComment = asyncHandler(async (req, res, next) => {
   comment.text = req.body.text;
   await comment.save();
   
+  // ⬇ FIX: We must populate the author BEFORE emitting the socket event
   comment = await comment.populate('author', 'name email avatar'); 
 
   const io = req.app.get('io');
