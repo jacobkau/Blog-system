@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import { useAuth } from './useAuth';
 
-export const AuthContext = createContext(); // 👈 this must be exported
+export const AuthContext = createContext();
 
 export default function AuthProvider({ children }) {
   const auth = useAuth();
