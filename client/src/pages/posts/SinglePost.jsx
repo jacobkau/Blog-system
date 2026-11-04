@@ -58,8 +58,10 @@ const SinglePost = () => {
     }
   };
 
-  // ⬇ CHANGED: Allow if user is the author OR if the user is an admin
-  const isAuthor = user?.id?.toString() === post?.author?._id?.toString();
+  const currentUserId = user?._id || user?.id;
+  const postAuthorId = post?.author?._id || post?.author?.id;
+  
+  const isAuthor = currentUserId && postAuthorId && currentUserId.toString() === postAuthorId.toString();
   const isAdmin = user?.role === 'admin';
   const canManagePost = isAuthor || isAdmin;
 
@@ -67,7 +69,6 @@ const SinglePost = () => {
   if (error) return <Typography color="error">{error}</Typography>;
   if (!post) return <Typography>Post not found</Typography>;
 
-  // Sanitize HTML before rendering
   const safeHTML = DOMPurify.sanitize(post.content || '', {
     ADD_ATTR: ['target', 'rel'],
   });
@@ -78,12 +79,10 @@ const SinglePost = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <article>
-        {/* Title */}
         <Typography variant="h3" component="h1" gutterBottom fontWeight={700}>
           {post.title}
         </Typography>
 
-        {/* Meta row */}
         <Box
           sx={{
             display: 'flex',
@@ -108,7 +107,6 @@ const SinglePost = () => {
           )}
         </Box>
 
-        {/* Categories */}
         {Array.isArray(post.categories) && post.categories.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
             {post.categories.map((cat) => (
@@ -125,7 +123,6 @@ const SinglePost = () => {
           </Box>
         )}
 
-        {/* Featured image */}
         {hasFeatured && (
           <Box
             component="img"
@@ -143,7 +140,6 @@ const SinglePost = () => {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Rich content */}
         <Box
           sx={{
             fontSize: '1.05rem',
@@ -199,10 +195,8 @@ const SinglePost = () => {
           dangerouslySetInnerHTML={{ __html: safeHTML }}
         />
 
-        {/* Comments */}
         <Comments postId={post._id} initialComments={post.comments || []} />
 
-        {/* Author/Admin actions */}
         {canManagePost && (
           <Box sx={{ mt: 5, display: 'flex', gap: 2 }}>
             <Button
