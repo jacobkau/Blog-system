@@ -1,7 +1,8 @@
 import express from 'express';
 import {
   getPosts, getPostsByCategory, createPost,
-  getPost, updatePost, deletePost
+  getPost, updatePost, deletePost,
+  likePost, sharePost 
 } from '../controllers/posts.js';
 import { protect } from '../middleware/Auth.js';
 import advancedResults from '../middleware/advancedResults.js';
@@ -23,6 +24,9 @@ router
   .put(protect, updatePost)
   .post(protect, updatePost)
   .delete(protect, deletePost);
+
+router.put('/:id/like', protect, likePost);
+router.post('/:id/share', protect, sharePost);
 
 router.get('/category/:categoryId', getPostsByCategory);
 
