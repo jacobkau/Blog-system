@@ -21,6 +21,7 @@ import Categories from './pages/categories/Categories';
 import EditCategory from './pages/categories/EditCategory';
 import CategoryPosts from './pages/categories/CategoryPosts.jsx';
 import Profile from './pages/user/Profile';
+import UserProfile from './pages/user/UserProfile';
 import NotFound from './pages/NotFound';
 
 const AdminRoute = ({ children }) => {
@@ -56,6 +57,8 @@ function App() {
             <Route path="/category/:slugOrId" element={<CategoryPosts />} />
             <Route path="/create-category" element={<CreateCategory />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<UserProfile />} /> 
+            
             
             {/* Admin Dashboard Route */}
             <Route 
