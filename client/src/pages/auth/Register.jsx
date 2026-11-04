@@ -295,10 +295,10 @@ const Register = () => {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => toast.error('Google Sign up Failed')}
-            useOneTap
             shape="pill"
             width="100%"
             text="signup_with"
+            use_fedcm_for_button={true} 
           />
         </Box>
 
