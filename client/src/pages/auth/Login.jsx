@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { toast } from 'react-toastify';
 import { useAuthContext } from '../../context';
 import {
   TextField,
@@ -83,6 +85,28 @@ const Login = () => {
   const handleMouseDownPassword = (e) => {
     e.preventDefault();
   };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const response = await fetch('https://blog-system-q65l.onrender.com/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: credentialResponse.credential }),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      localStorage.setItem('token', data.token);
+      toast.success('Logged in with Google!');
+      navigate('/');
+    } else {
+      toast.error(data.error || 'Google auth failed');
+    }
+  } catch (err) {
+    toast.error('Network error during Google login');
+  }
+};
 
   return (
     <Container maxWidth="sm">
@@ -236,6 +260,11 @@ const Login = () => {
               >
                 Create Account
               </Button>
+              <GoogleLogin
+  onSuccess={handleGoogleSuccess}
+  onError={() => toast.error('Google Login Failed')}
+  useOneTap 
+/>
             </Box>
           </Box>
         </Paper>
