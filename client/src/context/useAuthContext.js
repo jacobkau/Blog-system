@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AuthContext } from './AuthProvider'; // ✅ named import
+import { AuthContext } from './AuthProvider'; 
 
 export default function useAuthContext() {
   const context = useContext(AuthContext);
