@@ -225,6 +225,38 @@ export const updatePost = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: post });
 });
 
+// @desc    Like/Unlike a post
+// @route   PUT /api/posts/:id/like
+// @access  Private
+export const likePost = asyncHandler(async (req, res, next) => {
+  const post = await Post.findById(req.params.id);
+  if (!post) return next(new ErrorResponse('Post not found', 404));
+
+  const isLiked = post.likes.includes(req.user.id);
+
+  if (isLiked) {
+    post.likes = post.likes.filter(id => id.toString() !== req.user.id);
+  } else {
+    post.likes.push(req.user.id);
+  }
+
+  await post.save();
+  res.status(200).json({ success: true, likes: post.likes });
+});
+
+// @desc    Share a post
+// @route   POST /api/posts/:id/share
+// @access  Private
+export const sharePost = asyncHandler(async (req, res, next) => {
+  const post = await Post.findById(req.params.id);
+  if (!post) return next(new ErrorResponse('Post not found', 404));
+
+  post.shares.push(req.user.id);
+  await post.save();
+
+  res.status(200).json({ success: true, shares: post.shares.length });
+});
+
 // @desc    Delete post
 // @route   DELETE /api/posts/:id
 // @access  Private
