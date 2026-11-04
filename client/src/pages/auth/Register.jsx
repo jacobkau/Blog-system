@@ -43,31 +43,37 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // 1. Register the user 
+      
       await register({ name, email, password });
-
-      // 2. Send welcome email
       try {
+        const templateParams = {
+          to_email: email,
+          from_name: 'Witty Blog Team',
+          subject: 'Welcome to Witty Blog Community!',
+          message: [
+            `Hi ${name},`,
+            '',
+            'Welcome to the Witty Blog community! We are thrilled to have you on board.',
+            '',
+            'You can now start exploring, reading, and interacting with our content.',
+            '',
+            'Best regards,',
+            'The Witty Highbrow Technologies Team',
+            `© ${new Date().getFullYear()} wittyhighbrowtechnologies.com`,
+          ].join('\n'),
+        };
+
         await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_WELCOME_TEMPLATE_ID,
-          {
-            to_email: email, 
-            from_name: 'Witty Blog Technologies',
-            subject: 'Welcome to Witty Blog Community!',
-            message: `
-              <h2>Hi ${name},</h2>
-              <p>Welcome to the Witty Blog community! We are thrilled to have you on board.</p>
-              <p>You can now start exploring, reading, and interacting with our content.</p>
-              <br/>
-              <p>Best regards,</p>
-              <p><strong>The Witty Highbrow Technologies Team</strong></p>
-            `
-          },
+          templateParams,
           import.meta.env.VITE_EMAILJS_PUBLIC_KEY
         );
       } catch (emailErr) {
-        console.error('Welcome email failed:', emailErr?.text || emailErr?.message);
+        console.error(
+          'Welcome email failed:',
+          emailErr?.text || emailErr?.message
+        );
       }
 
       toast.success('Registration successful!');
