@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Home from './pages/Home';
 import CreateCategory from './pages/categories/CreateCategory';
 import Login from './pages/auth/Login';
+import Dashboard from './pages/Dashboard';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -45,6 +46,7 @@ function App() {
             <Route path="/category/:slugOrId" element={<CategoryPosts />} />
             <Route path="/create-category" element={<CreateCategory />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/dashboard" element={user?.role === 'admin' ? (<Dashboard />) : (<Navigate to="/" replace />)}/>
           </Route>
 
           {/* 404 */}
