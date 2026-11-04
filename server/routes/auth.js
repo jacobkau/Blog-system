@@ -9,6 +9,7 @@ import {
   resetPassword,    
   updatePassword,
   deleteAccount,
+  getUserById,
   googleAuth, 
 } from '../controllers/auth.js';
 import { protect } from '../middleware/Auth.js';
@@ -24,6 +25,7 @@ router.post('/google', googleAuth);
 router.put('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.get('/logout', logout);
 router.get('/me', protect, getMe);
+router.get('/user/:id', getUserById);
 router.put('/updatedetails', protect, updateDetails);
 router.put('/updatepassword', protect, updatePassword);
 router.post('/forgot-password', forgotPassword);
