@@ -28,7 +28,7 @@ const schema = yup.object().shape({
     .string()
     .required('Excerpt is required')
     .max(200, 'Excerpt must be less than 200 characters'),
-  categories: yup.array().min(1, 'Select at least one category'),
+  category: yup.string().required('Please select a category'), 
 });
 
 const getTextLength = (html = '') =>
@@ -43,7 +43,6 @@ const CreatePost = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
 
@@ -52,10 +51,13 @@ const CreatePost = () => {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { categories: [] },
+    defaultValues: { category: '' }, 
   });
+
+  const selectedCategory = watch('category');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -77,17 +79,9 @@ const CreatePost = () => {
 
   useEffect(() => {
     if (preSelectedCategory) {
-      setSelectedCategories([preSelectedCategory]);
-      setValue('categories', [preSelectedCategory], { shouldValidate: true });
+      setValue('category', preSelectedCategory, { shouldValidate: true });
     }
   }, [preSelectedCategory, setValue]);
-
-  const handleCategoryChange = (event) => {
-    const value = event.target.value;
-    const safeArray = Array.isArray(value) ? value : [value];
-    setSelectedCategories(safeArray);
-    setValue('categories', safeArray, { shouldValidate: true });
-  };
 
   const onSubmit = async (data) => {
     if (!user) {
@@ -108,7 +102,7 @@ const CreatePost = () => {
         title: data.title,
         content: contentHTML,
         excerpt: data.excerpt,
-        categories: data.categories,
+        categories: [data.category], 
         featuredImage,
       });
       navigate('/posts');
@@ -160,34 +154,18 @@ const CreatePost = () => {
             }
           />
 
-          <FormControl fullWidth margin="normal" error={!!errors.categories}>
-            <InputLabel id="category-select-label">Categories</InputLabel>
+          <FormControl fullWidth margin="normal" error={!!errors.category}>
+            <InputLabel id="category-label">Category</InputLabel>
             <Select
-              labelId="category-select-label"
-              id="category-select"
-              multiple
-              value={selectedCategories}
-              onChange={handleCategoryChange}
-              label="Categories"
+              labelId="category-label"
+              label="Category"
+              value={selectedCategory}
+              onChange={(e) => setValue('category', e.target.value, { shouldValidate: true })}
               MenuProps={{
-                disablePortal: false,
                 PaperProps: {
-                  style: {
-                    maxHeight: 250,
-                    width: 250,
-                  },
+                  style: { maxHeight: 250 },
                 },
               }}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {(Array.isArray(selected) ? selected : []).map((value) => (
-                    <Chip
-                      key={value}
-                      label={categories.find((c) => c._id === value)?.name || value}
-                    />
-                  ))}
-                </Box>
-              )}
             >
               {categories.map((category) => (
                 <MenuItem key={category._id} value={category._id}>
@@ -195,9 +173,9 @@ const CreatePost = () => {
                 </MenuItem>
               ))}
             </Select>
-            {errors.categories && (
+            {errors.category && (
               <Typography variant="caption" color="error">
-                {errors.categories.message}
+                {errors.category.message}
               </Typography>
             )}
           </FormControl>
