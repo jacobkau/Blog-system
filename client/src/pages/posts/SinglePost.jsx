@@ -4,6 +4,7 @@ import { Container, Typography, Button, Box, Chip, Divider } from '@mui/material
 import DOMPurify from 'dompurify';
 import postService from '../../api/posts';
 import Spinner from '../../components/ui/Spinner';
+import Comments from '../../components/Comments'; 
 import { useAuthContext } from '../../context';
 
 const SinglePost = () => {
@@ -191,6 +192,9 @@ const SinglePost = () => {
           }}
           dangerouslySetInnerHTML={{ __html: safeHTML }}
         />
+
+        {/* Comments */}
+        <Comments postId={post._id} initialComments={post.comments || []} />
 
         {/* Author actions */}
         {isAuthor && (
