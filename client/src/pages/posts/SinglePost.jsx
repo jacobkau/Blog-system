@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Chip, Divider } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Divider, IconButton } from '@mui/material';
+import { Favorite, FavoriteBorder, Share } from '@mui/icons-material';
 import DOMPurify from 'dompurify';
+import { toast } from 'react-toastify'; 
 import postService from '../../api/posts';
 import Spinner from '../../components/ui/Spinner';
 import Comments from '../../components/posts/Comments';
 import { useAuthContext } from '../../context';
-import { Favorite, FavoriteBorder, Share } from '@mui/icons-material';
-import { IconButton } from '@mui/material';
 
 const SinglePost = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthContext();
-  const [postLikes, setPostLikes] = useState(post?.likes || []);
-  const [isLiking, setIsLiking] = useState(false);
+  
+  // ⬇ STATE DECLARATIONS (Order matters!)
   const [post, setPost] = useState(null);
+  const [postLikes, setPostLikes] = useState([]);
+  const [isLiking, setIsLiking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,37 +27,13 @@ const SinglePost = () => {
       setLoading(false);
       return;
     }
-    const handleLike = async () => {
-  if (!user) return toast.error('Log in to like posts');
-  if (isLiking) return;
-  setIsLiking(true);
-  try {
-    const res = await postService.likePost(post._id);
-    setPostLikes(res.likes);
-  } catch (err) {
-    toast.error('Failed to like post');
-  } finally {
-    setIsLiking(false);
-  }
-};
-    const handleShare = async () => {
-  if (!user) return toast.error('Log in to share posts');
-  try {
-    await postService.sharePost(post._id);
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copied to clipboard & share recorded!');
-  } catch (err) {
-    toast.error('Failed to share');
-  }
-};
-
-const isLiked = user && postLikes.includes(user.id);
 
     const fetchPost = async () => {
       try {
         setLoading(true);
         const response = await postService.getPost(id);
         setPost(response.data);
+        setPostLikes(response.data.likes || []); 
         setLoading(false);
       } catch (err) {
         console.error('Failed to fetch post:', err);
@@ -70,6 +48,33 @@ const isLiked = user && postLikes.includes(user.id);
 
     fetchPost();
   }, [id]);
+
+  // ⬇ HANDLERS (Outside of useEffect)
+  const handleLike = async () => {
+    if (!user) return toast.error('Log in to like posts');
+    if (isLiking) return;
+    
+    setIsLiking(true);
+    try {
+      const res = await postService.likePost(post._id);
+      setPostLikes(res.likes);
+    } catch (err) {
+      toast.error('Failed to like post');
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!user) return toast.error('Log in to share posts');
+    try {
+      await postService.sharePost(post._id);
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied to clipboard & share recorded!');
+    } catch (err) {
+      toast.error('Failed to share');
+    }
+  };
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
@@ -86,13 +91,16 @@ const isLiked = user && postLikes.includes(user.id);
     }
   };
 
+  // ⬇ PERMISSIONS
   const currentUserId = user?._id || user?.id;
   const postAuthorId = post?.author?._id || post?.author?.id;
-  
   const isAuthor = currentUserId && postAuthorId && currentUserId.toString() === postAuthorId.toString();
   const isAdmin = user?.role === 'admin';
   const canManagePost = isAuthor || isAdmin;
+  
+  const isLiked = user && postLikes.includes(user.id);
 
+  // ⬇ EARLY RETURNS
   if (loading) return <Spinner />;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!post) return <Typography>Post not found</Typography>;
@@ -101,8 +109,7 @@ const isLiked = user && postLikes.includes(user.id);
     ADD_ATTR: ['target', 'rel'],
   });
 
-  const hasFeatured =
-    post.featuredImage && post.featuredImage !== 'no-photo.jpg';
+  const hasFeatured = post.featuredImage && post.featuredImage !== 'no-photo.jpg';
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -222,16 +229,17 @@ const isLiked = user && postLikes.includes(user.id);
           }}
           dangerouslySetInnerHTML={{ __html: safeHTML }}
         />
+
+        {/* LIKE & SHARE BUTTONS */}
         <Box sx={{ display: 'flex', gap: 2, my: 4, borderTop: 1, borderBottom: 1, borderColor: 'divider', py: 2 }}>
-  <IconButton onClick={handleLike} color={isLiked ? 'error' : 'default'}>
-    {isLiked ? <Favorite /> : <FavoriteBorder />}
-    <Typography sx={{ ml: 1 }}>{postLikes.length}</Typography>
-  </IconButton>
-  <IconButton onClick={handleShare}>
-    <Share />
-  </IconButton>
-</Box>
-        
+          <IconButton onClick={handleLike} color={isLiked ? 'error' : 'default'} disabled={isLiking}>
+            {isLiked ? <Favorite /> : <FavoriteBorder />}
+            <Typography sx={{ ml: 1 }}>{postLikes.length}</Typography>
+          </IconButton>
+          <IconButton onClick={handleShare}>
+            <Share />
+          </IconButton>
+        </Box>
 
         <Comments postId={post._id} initialComments={post.comments || []} />
 
