@@ -24,7 +24,6 @@ const buildPostQuery = (req) => {
   const query = {};
   const { search, author, category } = req.query;
 
-  // Full-text-ish search across multiple fields
   if (search && search.trim()) {
     const regex = new RegExp(escapeRegex(search.trim()), 'i');
     query.$or = [
@@ -34,12 +33,10 @@ const buildPostQuery = (req) => {
     ];
   }
 
-  // Filter by author id
   if (author && mongoose.Types.ObjectId.isValid(author)) {
     query.author = author;
   }
 
-  // Filter by category id
   if (category && mongoose.Types.ObjectId.isValid(category)) {
     query.categories = category;
   }
@@ -98,7 +95,6 @@ export const getPostsByCategory = asyncHandler(async (req, res, next) => {
 
   const query = { categories: categoryId };
 
-  // Optional search inside category
   if (req.query.search && req.query.search.trim()) {
     const regex = new RegExp(escapeRegex(req.query.search.trim()), 'i');
     query.$or = [{ title: regex }, { excerpt: regex }, { content: regex }];
@@ -186,7 +182,7 @@ export const createPost = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/posts/:id
 // @access  Private
 export const updatePost = asyncHandler(async (req, res, next) => {
-  const post = await Post.findById(req.params.id);
+  const post = await Post.findById(req.params.id).populate('author', 'email');
 
   if (!post) {
     return next(
@@ -194,7 +190,10 @@ export const updatePost = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (post.author.toString() !== req.user.id && req.user.role !== 'admin') {
+  const isAuthor = post.author.email === req.user.email;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isAuthor && !isAdmin) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to update this post`,
@@ -230,7 +229,7 @@ export const updatePost = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/posts/:id
 // @access  Private
 export const deletePost = asyncHandler(async (req, res, next) => {
-  const post = await Post.findById(req.params.id);
+  const post = await Post.findById(req.params.id).populate('author', 'email');
 
   if (!post) {
     return next(
@@ -238,7 +237,10 @@ export const deletePost = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (post.author.toString() !== req.user.id && req.user.role !== 'admin') {
+  const isAuthor = post.author.email === req.user.email;
+  const isAdmin = req.user.role === 'admin';
+
+  if (!isAuthor && !isAdmin) {
     return next(
       new ErrorResponse(
         `User ${req.user.id} is not authorized to delete this post`,
@@ -247,9 +249,7 @@ export const deletePost = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Clean up comments belonging to this post
   await Comment.deleteMany({ post: post._id });
-
   await post.deleteOne();
 
   res.status(200).json({ success: true, data: {} });
