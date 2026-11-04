@@ -21,6 +21,7 @@ import categoryService from '../../api/categories';
 import { useAuthContext } from '../../context';
 import Spinner from '../../components/ui/Spinner';
 import RichTextEditor from '../../components/editor/RichTextEditor';
+import FeaturedImageUploader from '../../components/posts/FeaturedImageUploader';
 
 const schema = yup.object().shape({
   title: yup.string().required('Title is required'),
@@ -50,8 +51,8 @@ const EditPost = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Content lives in its own state (HTML)
   const [contentHTML, setContentHTML] = useState('');
+  const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
 
   const {
     register,
@@ -91,8 +92,8 @@ const EditPost = () => {
           categories: getCategoryIds(fetchedPost.categories || []),
         });
 
-        
         setContentHTML(fetchedPost.content || '');
+        setFeaturedImage(fetchedPost.featuredImage || 'no-photo.jpg'); 
 
         setLoading(false);
       } catch (err) {
@@ -123,9 +124,10 @@ const EditPost = () => {
     try {
       await postService.updatePost(id, {
         title: data.title,
-        content: contentHTML, 
+        content: contentHTML,
         excerpt: data.excerpt,
         categories: data.categories,
+        featuredImage, // ⬅ NEW
       });
       navigate(`/posts/${id}`);
     } catch (err) {
@@ -213,7 +215,13 @@ const EditPost = () => {
             )}
           </FormControl>
 
-          {/* content */}
+          {/* Featured image (Cloudinary) */}
+          <FeaturedImageUploader
+            value={featuredImage}
+            onChange={setFeaturedImage}
+          />
+
+          {/* Content */}
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
               Content
