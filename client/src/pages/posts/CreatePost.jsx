@@ -20,7 +20,7 @@ import postService from '../../api/posts';
 import categoryService from '../../api/categories';
 import { useAuthContext } from '../../context';
 import RichTextEditor from '../../components/editor/RichTextEditor';
-
+import FeaturedImageUploader from '../../components/posts/FeaturedImageUploader';
 
 const schema = yup.object().shape({
   title: yup.string().required('Title is required'),
@@ -30,7 +30,6 @@ const schema = yup.object().shape({
     .max(200, 'Excerpt must be less than 200 characters'),
   categories: yup.array().min(1, 'Select at least one category'),
 });
-
 
 const getTextLength = (html = '') =>
   html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
@@ -45,8 +44,8 @@ const CreatePost = () => {
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-
   const [contentHTML, setContentHTML] = useState('');
+  const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
 
   const {
     register,
@@ -96,7 +95,6 @@ const CreatePost = () => {
       return;
     }
 
-  
     if (getTextLength(contentHTML) < 100) {
       setError('Content must be at least 100 characters.');
       return;
@@ -108,9 +106,10 @@ const CreatePost = () => {
     try {
       await postService.createPost({
         title: data.title,
-        content: contentHTML, 
+        content: contentHTML,
         excerpt: data.excerpt,
         categories: data.categories,
+        featuredImage, // ⬅ NEW
       });
       navigate('/posts');
     } catch (err) {
@@ -191,7 +190,13 @@ const CreatePost = () => {
             )}
           </FormControl>
 
-          {/*  content */}
+          {/* Featured image (Cloudinary) */}
+          <FeaturedImageUploader
+            value={featuredImage}
+            onChange={setFeaturedImage}
+          />
+
+          {/* Content */}
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
               Content
