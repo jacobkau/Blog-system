@@ -53,6 +53,9 @@ const EditPost = () => {
 
   const [contentHTML, setContentHTML] = useState('');
   const [featuredImage, setFeaturedImage] = useState('no-photo.jpg'); 
+  
+  // ⬇ NEW: State to control the dropdown
+  const [selectOpen, setSelectOpen] = useState(false);
 
   const {
     register,
@@ -127,7 +130,7 @@ const EditPost = () => {
         content: contentHTML,
         excerpt: data.excerpt,
         categories: data.categories,
-        featuredImage, // ⬅ NEW
+        featuredImage, 
       });
       navigate(`/posts/${id}`);
     } catch (err) {
@@ -191,6 +194,9 @@ const EditPost = () => {
               onChange={(e) =>
                 setValue('categories', e.target.value, { shouldValidate: true })
               }
+              open={selectOpen}                  
+              onOpen={() => setSelectOpen(true)} 
+              onClose={() => setSelectOpen(false)} 
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
