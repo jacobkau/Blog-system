@@ -6,12 +6,15 @@ import postService from '../../api/posts';
 import Spinner from '../../components/ui/Spinner';
 import Comments from '../../components/posts/Comments';
 import { useAuthContext } from '../../context';
+import { Favorite, FavoriteBorder, Share } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 
 const SinglePost = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthContext();
-
+  const [postLikes, setPostLikes] = useState(post?.likes || []);
+  const [isLiking, setIsLiking] = useState(false);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +25,31 @@ const SinglePost = () => {
       setLoading(false);
       return;
     }
+    const handleLike = async () => {
+  if (!user) return toast.error('Log in to like posts');
+  if (isLiking) return;
+  setIsLiking(true);
+  try {
+    const res = await postService.likePost(post._id);
+    setPostLikes(res.likes);
+  } catch (err) {
+    toast.error('Failed to like post');
+  } finally {
+    setIsLiking(false);
+  }
+};
+    const handleShare = async () => {
+  if (!user) return toast.error('Log in to share posts');
+  try {
+    await postService.sharePost(post._id);
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Link copied to clipboard & share recorded!');
+  } catch (err) {
+    toast.error('Failed to share');
+  }
+};
+
+const isLiked = user && postLikes.includes(user.id);
 
     const fetchPost = async () => {
       try {
@@ -194,6 +222,16 @@ const SinglePost = () => {
           }}
           dangerouslySetInnerHTML={{ __html: safeHTML }}
         />
+        <Box sx={{ display: 'flex', gap: 2, my: 4, borderTop: 1, borderBottom: 1, borderColor: 'divider', py: 2 }}>
+  <IconButton onClick={handleLike} color={isLiked ? 'error' : 'default'}>
+    {isLiked ? <Favorite /> : <FavoriteBorder />}
+    <Typography sx={{ ml: 1 }}>{postLikes.length}</Typography>
+  </IconButton>
+  <IconButton onClick={handleShare}>
+    <Share />
+  </IconButton>
+</Box>
+        
 
         <Comments postId={post._id} initialComments={post.comments || []} />
 
