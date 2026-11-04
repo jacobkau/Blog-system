@@ -19,8 +19,8 @@ const getComments = async (postId) => {
   return res.data;
 };
 
-const addComment = async (postId, text) => {
-  const res = await apiClient.post(`${postId}/comments`, { text });
+const addComment = async (postId, text, parentComment = null) => {
+  const res = await apiClient.post(`${postId}/comments`, { text, parentComment });
   return res.data;
 };
 
