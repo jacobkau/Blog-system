@@ -36,7 +36,10 @@ const CommentItem = ({
   
   // Local state for likes
   const [likes, setLikes] = useState(comment.likes || []);
-  const isLiked = user && likes.includes(user.id);
+  
+  // ⬇ FIX: Convert all likes to strings before checking
+  const stringLikes = likes.map(id => id.toString());
+  const isLiked = user && stringLikes.includes(user.id);
 
   const isNested = depth > 0;
 
@@ -64,7 +67,6 @@ const CommentItem = ({
     try {
       await commentService.editComment(postId, comment._id, editText.trim());
       setIsEditing(false);
-      // The socket will update the UI, but we can also update local state just in case
       comment.text = editText; 
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to edit comment');
@@ -290,7 +292,6 @@ const Comments = ({ postId, initialComments = [] }) => {
     const onDeleted = (id) => {
       setComments((prev) => prev.filter((x) => x._id !== id && x.parentComment !== id));
     };
-    // Add socket listener for edits if you emit it from backend
     const onUpdated = (updatedComment) => {
       setComments((prev) => 
         prev.map((c) => c._id === updatedComment._id ? updatedComment : c)
