@@ -7,8 +7,10 @@ import {
   Button,
   Box,
   Chip,
+  Stack,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { FavoriteBorder, Share, ChatBubbleOutline } from '@mui/icons-material'; // ⬅ Import Icons
 
 const stripHtml = (html = '') =>
   html
@@ -30,7 +32,6 @@ const PostList = ({ posts }) => {
   return (
     <>
       {posts.map((post) => {
-
         const rawPreview =
           post.excerpt?.trim() || stripHtml(post.content) || 'No content available';
         const preview = stripHtml(rawPreview).substring(0, 160);
@@ -39,10 +40,7 @@ const PostList = ({ posts }) => {
           post.featuredImage && post.featuredImage !== 'no-photo.jpg';
 
         return (
-          <Grid
-            size={{ xs: 12, sm: 6, md: 4 }}  
-            key={post._id}
-          >
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={post._id}>
             <Card
               sx={{
                 height: '100%',
@@ -75,7 +73,7 @@ const PostList = ({ posts }) => {
                 </Typography>
 
                 {Array.isArray(post.categories) && post.categories.length > 0 && (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
                     {post.categories.slice(0, 3).map((cat) => (
                       <Chip
                         key={cat._id || cat}
@@ -102,6 +100,22 @@ const PostList = ({ posts }) => {
                     {new Date(post.createdAt).toLocaleDateString()}
                   </Typography>
                 </Box>
+
+                {/* ⬇ NEW: Likes, Shares, Comments Counter */}
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2, color: 'text.secondary' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <FavoriteBorder fontSize="small" />
+                    <Typography variant="caption">{post.likeCount || 0}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Share fontSize="small" />
+                    <Typography variant="caption">{post.shareCount || 0}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ChatBubbleOutline fontSize="small" />
+                    <Typography variant="caption">{post.commentCount || 0}</Typography>
+                  </Box>
+                </Stack>
               </CardContent>
 
               <Box sx={{ p: 2, pt: 0 }}>
