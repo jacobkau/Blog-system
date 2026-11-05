@@ -14,7 +14,6 @@ const SinglePost = () => {
   const { id } = useParams();
   const { user } = useAuthContext();
   
-  // ⬇ STATE DECLARATIONS (Order matters!)
   const [post, setPost] = useState(null);
   const [postLikes, setPostLikes] = useState([]);
   const [isLiking, setIsLiking] = useState(false);
@@ -49,7 +48,6 @@ const SinglePost = () => {
     fetchPost();
   }, [id]);
 
-  // ⬇ HANDLERS (Outside of useEffect)
   const handleLike = async () => {
     if (!user) return toast.error('Log in to like posts');
     if (isLiking) return;
@@ -91,16 +89,16 @@ const SinglePost = () => {
     }
   };
 
-  // ⬇ PERMISSIONS
   const currentUserId = user?._id || user?.id;
   const postAuthorId = post?.author?._id || post?.author?.id;
   const isAuthor = currentUserId && postAuthorId && currentUserId.toString() === postAuthorId.toString();
   const isAdmin = user?.role === 'admin';
   const canManagePost = isAuthor || isAdmin;
   
-  const isLiked = user && postLikes.includes(user.id);
+  // ⬇ FIX: Convert all likes to strings before checking
+  const stringLikes = postLikes.map(id => id.toString());
+  const isLiked = user && stringLikes.includes(user.id);
 
-  // ⬇ EARLY RETURNS
   if (loading) return <Spinner />;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!post) return <Typography>Post not found</Typography>;
