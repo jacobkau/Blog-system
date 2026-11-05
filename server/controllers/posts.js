@@ -60,14 +60,24 @@ export const getPosts = asyncHandler(async (req, res) => {
       .limit(limit)
       .sort(req.query.sort || '-createdAt')
       .populate('author', 'name email')
-      .populate('categories', 'name'),
+      .populate('categories', 'name')
+      .populate('comments', '_id'), 
     Post.countDocuments(query),
   ]);
+  const formattedPosts = posts.map((post) => {
+    const postObj = post.toObject();
+    return {
+      ...postObj,
+      likeCount: postObj.likes ? postObj.likes.length : 0,
+      shareCount: postObj.shares ? postObj.shares.length : 0,
+      commentCount: postObj.comments ? postObj.comments.length : 0,
+    };
+  });
 
   res.status(200).json({
     status: 'success',
-    results: posts.length,
-    data: posts,
+    results: formattedPosts.length,
+    data: formattedPosts,
     pagination: {
       total,
       pages: Math.ceil(total / limit) || 1,
