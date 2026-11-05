@@ -103,7 +103,7 @@ const Navbar = ({ user, onLogout }) => {
         </Box>
         <Box>
           <Typography variant="h6" fontWeight={700} lineHeight={1}>
-            Witty Blog
+            Witty Blog 
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Management System
@@ -313,18 +313,20 @@ const Navbar = ({ user, onLogout }) => {
                 gap: 1,
               }}
             >
-              <Avatar
+              <Box
+                component="img"
+                src="/logo.png"
+                alt="Witty Blog Logo"
                 sx={{
-                  bgcolor: "primary.main",
-                  width: { xs: 30, md: 36 },
-                  height: { xs: 30, md: 36 },
-                  display: { xs: "none", sm: "flex" },
+                  width: { xs: 30,md:40},
+                  height: { xs:30, md: 40},
+                  display: {xs: "none",sm:"block"},
+                  objectFit: "contain",
+                  borderRadius: 1,
                 }}
-              >
-                <ArticleIcon fontSize={isMobile ? "small" : "medium"} />
-              </Avatar>
-              <Box component="span" sx={{ display: { xs: "none", sm: "block" } }}>
-                Witty Blog
+                />
+              <Box component ="span" sx={{ display: {xs:"none", sm: "block" }}}>
+                Witty Blog Management System
               </Box>
               <Box
                 component="span"
