@@ -2,10 +2,10 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../../context'; 
 
 const ProtectedRoute = () => {
-  const { user, isLoading } = useAuthContext();
+  const { user, initialized } = useAuthContext(); 
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (!initialized) {
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>Loading...</div>;
   }
 
   if (!user) {
