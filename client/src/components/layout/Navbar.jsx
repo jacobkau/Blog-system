@@ -313,7 +313,14 @@ const Navbar = ({ user, onLogout }) => {
                 gap: 1,
               }}
             >
-              
+              <Avatar
+                sx={{
+                  bgcolor: "primary.main",
+                  width: { xs: 30, md: 36 },
+                  height: { xs: 30, md: 36 },
+                  display: { xs: "none", sm: "flex" },
+                }}
+              >
                 <ArticleIcon fontSize={isMobile ? "small" : "medium"} />
               </Avatar>
               <Box component="span" sx={{ display: { xs: "none", sm: "block" } }}>
