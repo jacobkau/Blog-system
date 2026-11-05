@@ -325,11 +325,11 @@ const Navbar = ({ user, onLogout }) => {
                   borderRadius: 1,
                 }}
                 />
-              <Box component ="span" sx={{ display: {xs:"none", sm: "block" }, flexDirection: "column" }}>
-                  <Typography>
+              <Box component ="span" sx={{ display: {xs:"none", sm: "flex" },justifyContent: "center", lineHeight: 1.2, flexDirection: "column" }}>
+                  <Typography variant="h6" sx ={{ fontWeight:700, color:"primary.main", lineHeight:1 }}>
                      Witty Blog
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" sx={{fontSize: "0.7rem", mt: 0.5 }}>
                      Management System
                   </Typography>
               </Box>
