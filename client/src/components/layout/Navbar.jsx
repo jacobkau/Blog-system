@@ -299,7 +299,23 @@ const Navbar = ({ user, onLogout }) => {
             )}
 
             {/* Logo */}
-          
+            <Typography
+              variant={isMobile ? "h6" : "h5"}
+              component={Link}
+              to="/"
+              sx={{
+                textDecoration: "none",
+                color: "primary.main",
+                fontWeight: 700,
+                mr: { xs: 2, md: 4 },
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              
+                <ArticleIcon fontSize={isMobile ? "small" : "medium"} />
+              </Avatar>
               <Box component="span" sx={{ display: { xs: "none", sm: "block" } }}>
                 Witty Blog
               </Box>
