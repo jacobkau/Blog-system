@@ -326,10 +326,12 @@ const Navbar = ({ user, onLogout }) => {
                 }}
                 />
               <Box component ="span" sx={{ display: {xs:"none", sm: "block" }, flexDirection: "column" }}>
-                Witty Blog 
-              <Typography variant="caption" color="text.secondary">
-                Management System
-                </Typography>
+                  <Typography>
+                     Witty Blog
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                     Management System
+                  </Typography>
               </Box>
               <Box
                 component="span"
